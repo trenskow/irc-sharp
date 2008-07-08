@@ -16,6 +16,9 @@
  **********************************************************************************
  */
 #endregion
+// 08-07-2008 by Kristain Trenskow
+// Transition to Google Code complete
+//
 // 26-02-2005 by Kristian Trenskow
 // Removed RTF formatting and trial code.
 //
