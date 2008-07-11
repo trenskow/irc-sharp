@@ -24,6 +24,33 @@ namespace IRC
 		private string strNetworkIdentifier;
 		private bool blIsChannel;
 		
+		/// <summary>
+		/// Occurs when a user sends a message (/MSG) directly or to a channel.
+		/// </summary>
+		/// <seealso cref="MessageEventArgs"/>
+		/// <threadsafe instance="false"/>
+		/// <remarks>When this event is fired by the Connection, it is fired in another thread then the original thread 
+		/// that created the class. Because of this you need to use the Invoke() method on your form if you're creating using Windows forms.</remarks>
+		public event MessageEventHandler RecievedMessage;
+
+		/// <summary>
+		/// Occurs when a user sends a notice (/NOTICE) directly or to a channel.
+		/// </summary>
+		/// <seealso cref="MessageEventArgs"/>
+		/// <threadsafe instance="false"/>
+		/// <remarks>When this event is fired by the Connection, it is fired in another thread then the original thread 
+		/// that created the class. Because of this you need to use the Invoke() method on your form if you're creating using Windows forms.</remarks>
+		public event MessageEventHandler RecievedNotice;
+
+		/// <summary>
+		/// Occurs when a user sends a CtCp request.
+		/// </summary>
+		/// <seealso cref="CtCpMessageEventArgs"/>
+		/// <threadsafe instance="false"/>
+		/// <remarks>When this event is fired by the Connection, it is fired in another thread then the original thread 
+		/// that created the class. Because of this you need to use the Invoke() method on your form if you're creating using Windows forms.</remarks>
+		public event CtCpMessageEventHandler RecievedCtCpMessage;
+
 		internal MessageReciever(ServerConnection creatorsCurrentConnection, string NetworkIdentifier, bool isChannel) : base(creatorsCurrentConnection)
 		{
 			strNetworkIdentifier = NetworkIdentifier;
@@ -145,9 +172,27 @@ namespace IRC
 		/// Sends a notice to a users nick name or channel.
 		/// </summary>
 		/// <param name="Message">The message to notice.</param>
-		public void SendNotice(string Message)
+		public void Notice(string Message)
 		{
 			base.CurrentConnection.SendData("NOTICE " + strNetworkIdentifier + " :" + Message + "");
+		}
+		
+		internal void FireRecievedMessage(User user, string message, bool isAction)
+		{
+			if (this.RecievedMessage != null)
+				this.RecievedMessage(this, new MessageEventArgs(user, message, isAction));
+		}
+		
+		internal void FireRecievedNotice(User user, string message)
+		{
+			if (this.RecievedNotice != null)
+				this.RecievedNotice(this, new MessageEventArgs(user, message));
+		}
+		
+		internal void FireRecievedCtCpMessage(User user, string command, string parameters)
+		{
+			if (this.RecievedCtCpMessage != null)
+				this.RecievedCtCpMessage(this, new CtCpMessageEventArgs(user, command, parameters));
 		}
 	}
 }

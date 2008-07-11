@@ -90,20 +90,11 @@ namespace IRC
 	#region JoinEventArgs
 	public class JoinEventArgs : EventArgs
 	{
-		private string _channelname;
 		private User _user;
 		
-		internal JoinEventArgs(string __channelname, User __user)
+		internal JoinEventArgs(User __user)
 		{
-			_channelname = __channelname;
 			_user = __user;
-		}
-		/// <summary>
-		/// Gets the name of the channel the user joined.
-		/// </summary>
-		public string ChannelName
-		{
-			get { return _channelname; }
 		}
 		/// <summary>
 		/// Gets the user info of the user who joined.
@@ -135,22 +126,13 @@ namespace IRC
 	#region ModeChangeEventArgs
 	public class ModeChangeEventArgs : EventArgs
 	{
-		private Channel _channel;
 		private User _user;
 		private string _mode;
 		
-		internal ModeChangeEventArgs(Channel __channel, User __user, string __mode)
+		internal ModeChangeEventArgs(User __user, string __mode)
 		{
-			_channel = __channel;
 			_user = __user;
 			_mode = __mode;
-		}
-		/// <summary>
-		/// The name of the channel in which the mode was set.
-		/// </summary>
-		public Channel Channel
-		{
-			get { return _channel; }
 		}
 		/// <summary>
 		/// User info of the user who changed the mode.
@@ -168,22 +150,32 @@ namespace IRC
 		}
 	}
 	#endregion
-	#region ParEventtArgs
-	public class PartEventArgs : EventArgs
+#region PartCompleteEventArgs
+	public class PartCompleteEventArgs
 	{
 		private Channel _channel;
+		
+		internal PartCompleteEventArgs(Channel __channel)
+		{
+			_channel = __channel;
+		}
+		
+		public Channel Channel
+		{
+			get { return _channel; }
+		}
+	}
+#endregion
+	#region PartEventArgs
+	public class PartEventArgs : EventArgs
+	{
 		private User _user;
 		private string _reason;
 		
-		internal PartEventArgs(Channel __channel, User __user, string __reason)
+		internal PartEventArgs(User __user, string __reason)
 		{
-			_channel = __channel;
 			_user = __user;
 			_reason = __reason;
-		}
-		public Channel Channel
-		{
-			get { return _channel; }
 		}
 		public User User
 		{
@@ -198,20 +190,11 @@ namespace IRC
 	#region QuitEventArgs
 	public class QuitEventArgs : EventArgs
 	{
-		private User _user;
 		private string _reason;
 		
-		internal QuitEventArgs(User __user, string __reason)
+		internal QuitEventArgs(string __reason)
 		{
-			_user = __user;
 			_reason = __reason;
-		}
-		/// <summary>
-		/// User info of the user who quit.
-		/// </summary>
-		public User User
-		{
-			get { return _user; }
 		}
 		/// <summary>
 		/// The reason why the user quit.
@@ -253,19 +236,17 @@ namespace IRC
 	public class MessageEventArgs : EventArgs
 	{
 		private User _user;
-		private MessageReciever _recipient;
 		private string _message;
 		private bool _isAction;
 		
-		internal MessageEventArgs(User __user, MessageReciever __recipient, string __message, bool __isAction)
+		internal MessageEventArgs(User __user, string __message, bool __isAction)
 		{
 			_user = __user;
-			_recipient = __recipient;
 			_message = __message;
 			_isAction = __isAction;
 		}
 		
-		internal MessageEventArgs(User __user, MessageReciever __recipient, string __message) : this (__user, __recipient, __message, false)
+		internal MessageEventArgs(User __user, string __message) : this (__user, __message, false)
 		{
 		}
 		/// <summary>
@@ -274,14 +255,6 @@ namespace IRC
 		public User User
 		{
 			get { return _user; }
-		}
-		/// <summary>
-		/// The recipient to recieve the message.
-		/// </summary>
-		/// <remarks>This can be a nick or a channel name.</remarks>
-		public MessageReciever Recipient
-		{
-			get { return _recipient; }
 		}
 		/// <summary>
 		/// The message that was sent.
@@ -339,20 +312,11 @@ namespace IRC
 	#region CtCpPingReplyEventArgs
 	public class CtCpPingReplyEventArgs : EventArgs
 	{
-		private User _user;
 		private TimeSpan _pingtime;
 		
-		internal CtCpPingReplyEventArgs(User __user, TimeSpan __pingtime)
+		internal CtCpPingReplyEventArgs(TimeSpan __pingtime)
 		{
-			_user = __user;
 			_pingtime = __pingtime;
-		}
-		/// <summary>
-		/// The user which replyed the CtCp ping request.
-		/// </summary>
-		public User user
-		{
-			get { return _user; }
 		}
 		/// <summary>
 		/// The time the ping request was to return.
@@ -366,20 +330,11 @@ namespace IRC
 	#region CtCpReplyEventArgs
 	public class CtCpReplyEventArgs : EventArgs
 	{
-		private User _user;
 		private string _reply;
 		
-		internal CtCpReplyEventArgs(User __user, string __reply)
+		internal CtCpReplyEventArgs(string __reply)
 		{
-			_user = __user;
 			_reply = __reply;
-		}
-		/// <summary>
-		/// User info of the user who replyed the command.
-		/// </summary>
-		public User user
-		{
-			get { return _user; }
 		}
 		/// <summary>
 		/// Text the user replyed with.
@@ -393,22 +348,13 @@ namespace IRC
 	#region CtCpCommandReplyEventArgs
 	public class CtCpCommandReplyEventArgs : EventArgs
 	{
-		private User _user;
 		private string _command;
 		private string _reply;
 		
-		internal CtCpCommandReplyEventArgs(User __user, string __command, string __reply)
+		internal CtCpCommandReplyEventArgs(string __command, string __reply)
 		{
-			_user = __user;
 			_command = __command;
 			_reply = __reply;
-		}
-		/// <summary>
-		/// User info of the user that replyed the custom CtCp request.
-		/// </summary>
-		public User user
-		{
-			get { return _user; }
 		}
 		/// <summary>
 		/// The command that was responded.
@@ -430,15 +376,13 @@ namespace IRC
 	public class KickEventArgs : EventArgs
 	{
 		private User _kicker;
-		private Channel _channelname;
-		private string _kickednick;
+		private User _kicked;
 		private string _reason;
 		
-		internal KickEventArgs(User __kicker, Channel __channelname, string __kickednick, string __reason)
+		internal KickEventArgs(User __kicker, User __kicked, string __reason)
 		{
 			_kicker = __kicker;
-			_channelname = __channelname;
-			_kickednick = __kickednick;
+			_kicked = __kicked;
 			_reason = __reason;
 		}
 		public User Kicker
@@ -446,18 +390,11 @@ namespace IRC
 			get { return _kicker; }
 		}
 		/// <summary>
-		/// The channel from which the user was kicked.
-		/// </summary>
-		public Channel Channel
-		{
-			get { return _channelname; }
-		}
-		/// <summary>
 		/// The nick name of the user that was kicked.
 		/// </summary>
-		public string KickedNick
+		public User Kicked
 		{
-			get { return _kickednick; }
+			get { return _kicked; }
 		}
 		/// <summary>
 		/// Reason the user was kicked from the channel.
@@ -498,20 +435,11 @@ namespace IRC
 	#region BeforeNickChangeEventArgs
 	public class BeforeNickChangeEventArgs : EventArgs
 	{
-		private User _user;
 		private string _newnick;
 		
-		internal BeforeNickChangeEventArgs(User __user, string __newnick)
+		internal BeforeNickChangeEventArgs(string __newnick)
 		{
-			_user = __user;
 			_newnick = __newnick;
-		}
-		/// <summary>
-		/// User info of the user who changed his/her nick.
-		/// </summary>
-		public User User
-		{
-			get { return _user; }
 		}
 		/// <summary>
 		/// The new nick name the user got.
@@ -525,20 +453,11 @@ namespace IRC
 	#region NickChangeEventArgs
 	public class NickChangeEventArgs : EventArgs
 	{
-		private User _user;
 		private string _oldnick;
 		
-		internal NickChangeEventArgs(User __user, string __oldnick)
+		internal NickChangeEventArgs(string __oldnick)
 		{
-			_user = __user;
 			_oldnick = __oldnick;
-		}
-		/// <summary>
-		/// User info of the user who changed his/her nick.
-		/// </summary>
-		public User User
-		{
-			get { return _user; }
 		}
 		/// <summary>
 		/// The new nick name the user got.
@@ -553,14 +472,12 @@ namespace IRC
 	public class UserModeEventArgs : EventArgs
 	{
 		private User _user;
-		private Channel _channelname;
 		private User _victimnick;
 		private bool _way;
 		
-		internal UserModeEventArgs(User __user, Channel __channelname, User __victimnick, bool __way)
+		internal UserModeEventArgs(User __user, User __victimnick, bool __way)
 		{
 			_user = __user;
-			_channelname = __channelname;
 			_victimnick = __victimnick;
 			_way = __way;
 		}
@@ -569,16 +486,9 @@ namespace IRC
 			get { return _user; }
 		}
 		/// <summary>
-		/// The channel name where the user was opped/deopped/voiced/devoiced.
-		/// </summary>
-		public Channel Channel
-		{
-			get { return _channelname; }
-		}
-		/// <summary>
 		/// The nick of the user that was opped/deopped/voiced/devoiced.
 		/// </summary>
-		public User VictimNick
+		public User Victim
 		{
 			get { return _victimnick; }
 		}
@@ -594,20 +504,11 @@ namespace IRC
 	#region DCCChatRequestEventArgs
 	public class DCCChatRequestEventArgs : EventArgs
 	{
-		private User _user;
 		private DCCChat _newchat;
 		
-		internal DCCChatRequestEventArgs(User __user, DCCChat __newchat)
+		internal DCCChatRequestEventArgs(DCCChat __newchat)
 		{
-			_user = __user;
 			_newchat = __newchat;
-		}
-		/// <summary>
-		/// User info of the user that requested the DCC chat.
-		/// </summary>
-		public User User
-		{
-			get { return _user; }
 		}
 		/// <summary>
 		/// The chat object to use to responde.
@@ -621,20 +522,11 @@ namespace IRC
 	#region DCCTransferRequestEventArgs
 	public class DCCTransferRequestEventArgs : EventArgs
 	{
-		private User _user;
 		private DCCTransfer _newtransfer;
 		
-		internal DCCTransferRequestEventArgs(User __user, DCCTransfer __newtransfer)
+		internal DCCTransferRequestEventArgs(DCCTransfer __newtransfer)
 		{
-			_user = __user;
 			_newtransfer = __newtransfer;
-		}
-		/// <summary>
-		/// User info of the user who sent a DCC file transfer request.
-		/// </summary>
-		public User User
-		{
-			get { return _user; }
 		}
 		/// <summary>
 		/// The transfer object to use to responde.
@@ -717,12 +609,12 @@ namespace IRC
         }
     }
     #endregion
-#region UserEventArgs
-	public class UserEventArgs : EventArgs
+#region UnknownUserEmergedEventArgs
+	public class UnknownUserEmergedEventArgs
 	{
 		private User _user;
 		
-		internal UserEventArgs(User __user)
+		internal UnknownUserEmergedEventArgs(User __user)
 		{
 			_user = __user;
 		}

@@ -43,6 +43,60 @@ namespace IRC
 		private ChannelUserContainer users;
 		private ChannelBanContainer bans;
 
+		/// <summary>
+		/// Occurs when the a user joins a channel.
+		/// </summary>
+		/// <seealso cref="JoinEventArgs"/>
+		/// <threadsafe instance="false"/>
+		/// <remarks>When this event is fired by the Connection, it is fired in another thread then the original thread 
+		/// that created the class. Because of this you need to use the Invoke() method on your form if you're creating using Windows forms.</remarks>
+		public event JoinEventHandler Join;
+
+		/// <summary>
+		/// Occurs when mode is changed in a channel.
+		/// </summary>
+		/// <seealso cref="ModeChangeEventArgs"/>
+		/// <threadsafe instance="false"/>
+		/// <remarks>When this event is fired by the Connection, it is fired in another thread then the original thread 
+		/// that created the class. Because of this you need to use the Invoke() method on your form if you're creating using Windows forms.</remarks>
+		public event ModeChangeEventHandler ModeChange;
+
+		/// <summary>
+		/// Occurs when a user parts/leaves a channel, but before his/her info is removed from the Channels array.
+		/// </summary>
+		/// <seealso cref="PartEventArgs"/>
+		/// <threadsafe instance="false"/>
+		/// <remarks>When this event is fired by the Connection, it is fired in another thread then the original thread 
+		/// that created the class. Because of this you need to use the Invoke() method on your form if you're creating using Windows forms.</remarks>
+		public event PartEventHandler UserPart;
+
+		/// <summary>
+		/// Occurs when a user han been kicked from a channel.
+		/// </summary>
+		/// <seealso cref="KickEventArgs"/>
+		/// <threadsafe instance="false"/>
+		/// <remarks>When this event is fired by the Connection, it is fired in another thread then the original thread 
+		/// that created the class. Because of this you need to use the Invoke() method on your form if you're creating using Windows forms.</remarks>
+		public event KickEventHandler Kick;
+
+		/// <summary>
+		/// Occurs when a user is eather opped or deopped on a channel.
+		/// </summary>
+		/// <seealso cref="UserModeEventArgs"/>
+		/// <threadsafe instance="false"/>
+		/// <remarks>When this event is fired by the Connection, it is fired in another thread then the original thread 
+		/// that created the class. Because of this you need to use the Invoke() method on your form if you're creating using Windows forms.</remarks>
+		public event UserModeEventHandler UserOpStatusChange;
+
+		/// <summary>
+		/// Occurs when a user is eather voiced or devoiced on a channel.
+		/// </summary>
+		/// <seealso cref="UserModeEventArgs"/>
+		/// <threadsafe instance="false"/>
+		/// <remarks>When this event is fired by the Connection, it is fired in another thread then the original thread 
+		/// that created the class. Because of this you need to use the Invoke() method on your form if you're creating using Windows forms.</remarks>
+		public event UserModeEventHandler UserVoiceStatusChange;
+
 		#region Constructors
 		internal Channel(ServerConnection creatorsCurrentConnection, string Name) : base(creatorsCurrentConnection, Name, true)
 		{
@@ -329,5 +383,41 @@ namespace IRC
 			}
 		}
 		#endregion
+		
+		internal void FireJoin(User user)
+		{
+			if (Join != null)
+				Join(this, new JoinEventArgs(user));
+		}
+		
+		internal void FireModeChange(User user, string mode)
+		{
+			if (ModeChange != null)
+				ModeChange(this, new ModeChangeEventArgs(user, mode));
+		}
+		
+		internal void FirePart(User user, string reason)
+		{
+			if (UserPart != null)
+				UserPart(this, new PartEventArgs(user, reason));
+		}
+		
+		internal void FireKick(User kicker, User kicked, string reason)
+		{
+			if (this.Kick != null)
+				this.Kick(this, new KickEventArgs(kicker, kicked, reason));
+		}
+		
+		internal void FireUserOpStatusChanged(User user, User victim, bool way)
+		{
+			if (this.UserOpStatusChange != null)
+				this.UserOpStatusChange(this, new UserModeEventArgs(user, victim, way));
+		}
+		
+		internal void FireUserVoiceStatusChanged(User user, User victim, bool way)
+		{
+			if (this.UserVoiceStatusChange != null)
+				this.UserVoiceStatusChange(this, new UserModeEventArgs(user, victim, way));
+		}
 	}
 }

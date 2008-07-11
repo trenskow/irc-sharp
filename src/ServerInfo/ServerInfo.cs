@@ -25,6 +25,41 @@ namespace IRC
 {
     public class ServerInfo : IRCBase, IEnumerator, IEnumerable
     {
+		/// <summary>
+		/// Occurs when the servers sends a server message.
+		/// </summary>
+		/// <seealso cref="ServerMessageEventArgs"/>
+		/// <threadsafe instance="false"/>
+		/// <remarks>When this event is fired by the Connection, it is fired in another thread then the original thread 
+		/// that created the class. Because of this you need to use the Invoke() method on your form if you're creating using Windows forms.</remarks>
+		public event ServerMessageEventHandler ServerMessage;
+
+		/// <summary>
+		/// Occurs when user sends PING? request and the IRC control replyes with a PONG!.
+		/// </summary>
+		/// <threadsafe instance="false"/>
+		/// <remarks>When this event is fired by the Connection, it is fired in another thread then the original thread 
+		/// that created the class. Because of this you need to use the Invoke() method on your form if you're creating using Windows forms.</remarks>
+		public event IRCEventHandler PingPong;
+
+		// TODO: Move to the ServerInfo class
+		/// <summary>
+		/// Occurs when the servers Message of the Day is updated.
+		/// </summary>
+		/// <threadsafe instance="false"/>
+		/// <remarks>When this event is fired by the Connection, it is fired in another thread then the original thread 
+		/// that created the class. Because of this you need to use the Invoke() method on your form if you're creating using Windows forms.</remarks>
+		public event IRCEventHandler MessageOfTheDayUpdated;
+
+		/// <summary>
+		/// Occurs when the server sends a notice (/SNOTICE).
+		/// </summary>
+		/// <seealso cref="ServerNoticeEventArgs"/>
+		/// <threadsafe instance="false"/>
+		/// <remarks>When this event is fired by the Connection, it is fired in another thread then the original thread 
+		/// that created the class. Because of this you need to use the Invoke() method on your form if you're creating using Windows forms.</remarks>
+		public event ServerNoticeEventHandler ServerNotice;
+
         /// <summary>
         /// Identifies case mappings used by server.
         /// </summary>
@@ -247,6 +282,12 @@ namespace IRC
 			internal set { strMotd = value; }
 		}
 		
+		internal void FireMessageOfTheDayUpdated(Connection sender)
+		{
+			if (MessageOfTheDayUpdated != null)
+				MessageOfTheDayUpdated(sender, new EventArgs());
+		}
+		
         #region Array access methods
         public string Get(string Value)
         {
@@ -307,5 +348,23 @@ namespace IRC
         }
 
         #endregion
+		
+		internal void FireServerMessage(int serverCode, string[] parameters)
+		{
+			if (this.ServerMessage != null)
+				this.ServerMessage(base.CurrentConnection.Owner, new ServerMessageEventArgs(serverCode, parameters));
+		}
+		
+		internal void FirePingPong()
+		{
+			if (this.PingPong != null)
+				this.PingPong(base.CurrentConnection.Owner, new EventArgs());
+		}
+		
+		internal void FireServerNotice(string recipient, string message)
+		{
+			if (this.ServerNotice != null)
+				this.ServerNotice(base.CurrentConnection.Owner, new ServerNoticeEventArgs(recipient, message));
+		}
     }
 }

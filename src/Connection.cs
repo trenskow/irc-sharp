@@ -88,10 +88,9 @@ namespace IRC
 			identd = new IdentificationServer(base.CurrentConnection, this);
 			channels = new ChannelContainer(base.CurrentConnection);
 			users = new UserContainer(base.CurrentConnection);
-			// Event-chain from User objects to notify user of user information updates. Kind of hacky.
-			users.NewUserAdded += NewUserAdded;
 			dcc = new DCC(base.CurrentConnection, this);
             serverInfo = new ServerInfo(base.CurrentConnection, this);
+			base.CurrentConnection.Owner = this;
 		}
 
 		/// <summary>
@@ -267,11 +266,11 @@ namespace IRC
 		    get { return blInvisible; }
 	    }
 		#endregion
-        #region ServerInfo Property
+        #region Server Property
         /// <summary>
         /// Returns an object containing detailed information about server behavior.
         /// </summary>
-        public ServerInfo ServerInfo
+        public ServerInfo Server
         {
             get { return serverInfo; }
         }
@@ -353,8 +352,6 @@ namespace IRC
 		#region onDisconnected
 		private void onDisconnected(object sender, EventArgs e)
 		{
-			if (BeforeDisconnect!=null)
-				BeforeDisconnect(this, new EventArgs());
 			ShutdownClient();
 			if (Disconnected!=null)
 				Disconnected(this, new EventArgs());
@@ -422,8 +419,7 @@ namespace IRC
 					}
 					serverInfo.MessageOfTheDay = strMOTD.ToString();
 					strMOTD = null;
-					if (MessageOfTheDayUpdated!=null)
-						MessageOfTheDayUpdated(this, new EventArgs());
+					serverInfo.FireMessageOfTheDayUpdated(this);
 					break;
 #endregion
 #region 375, 372 // Start and content of MOTD
@@ -550,12 +546,10 @@ namespace IRC
 #endregion
 #region 315 // End of WHO response
 				case "315":
-					if (JoinComplete!=null && channels.GetChannel(e.Parameters[0]) == null)
-						JoinComplete(this, new JoinCompleteEventArgs(channels.GetChannel(e.Parameters[0])));
+					channels.FireJoinCompleted(channels.GetChannel(e.Parameters[0]));
 					break;
 				}
-				if (ServerMessage!=null)
-					ServerMessage(this, new ServerMessageEventArgs(int.Parse(e.Command), e.Parameters));
+				serverInfo.FireServerMessage(int.Parse(e.Command), e.Parameters);
 #endregion
 #endregion
 			}
@@ -569,14 +563,11 @@ namespace IRC
 #region PING? PONG!
 					case "ping":
 						base.CurrentConnection.SendData("PONG :" + e.Parameters[0] + "", false);
-						if (PingPong!=null)
-							PingPong(this, new EventArgs());
+						serverInfo.FirePingPong();
 						break;
 #endregion
 #region ERROR
 					case "error":
-						if (BeforeError!=null)
-							BeforeError(this, new ErrorEventArgs(e.Parameters[0]));
 						ShutdownClient();
 						if (Error!=null)
 							Error(this, new ErrorEventArgs(e.Parameters[0]));
@@ -588,8 +579,7 @@ namespace IRC
 							string[] tmp = new string[e.Parameters.Length - 1];
 							for (int x=1;x<e.Parameters.Length;x++)
 								tmp[x-1] = e.Parameters[x];
-							if (ServerNotice!=null)
-								ServerNotice(this, new ServerNoticeEventArgs(e.Parameters[0], string.Join(" ", tmp).Trim()));
+							serverInfo.FireServerNotice(e.Parameters[0], string.Join(" ", tmp));
 						}
 						break;
 #endregion
@@ -628,8 +618,7 @@ namespace IRC
 						}
 						ChannelUser newUser = new ChannelUser(base.CurrentConnection, users.GetUser(user), e.Parameters[0]);
 						channels[e.Parameters[0]].Users.AddUser(newUser);
-						if (Join!=null)
-							Join(this, new JoinEventArgs(e.Parameters[0], users.GetUser(user)));
+						channels[e.Parameters[0]].FireJoin(users.GetUser(user));
 						break;
 #endregion
 #region MODE
@@ -645,8 +634,7 @@ namespace IRC
 						{
 							channels[e.Parameters[0]].ParseMode(strMode);
 							CheckUserChannelStatus(user, e.Parameters[0], strMode);
-							if (ModeChange!=null)
-								ModeChange(this, new ModeChangeEventArgs(channels.GetChannel(e.Parameters[0]), users.GetUser(user), strMode));
+							channels[e.Parameters[0]].FireModeChange(users.GetUser(user), strMode);
 						}
 						else
 						{
@@ -673,52 +661,55 @@ namespace IRC
 #region PART
 					case "part":
 						EnsureInformation(user);
-						if (BeforePart!=null)
-							BeforePart(this, new PartEventArgs(channels.GetChannel(e.Parameters[0]), users.GetUser(user), e.Parameters.Length>1?e.Parameters[1]:""));
+						User partedUser = users.GetUser(user);
+						Channel partedChannel = channels.GetChannel(e.Parameters[0]);
 						if (user.Nick.ToLower()==strNickname.ToLower())
 						{
-							foreach (ChannelUser u in channels.GetChannel(e.Parameters[0]).Users)
+							foreach (ChannelUser u in partedChannel.Users)
 								if (!channels.IsUserOnAnyChannel(u.User.Nick, e.Parameters[0]))
 									users.Remove(u.User.Nick);
 							channels.RemoveChannel(e.Parameters[0]);
 						}
 						else
 						{
-							channels[e.Parameters[0]].Users.RemoveUser(user.Nick);
+							partedChannel.Users.RemoveUser(user.Nick);
 							if (!channels.IsUserOnAnyChannel(user.Nick))
 							    users.Remove(user.Nick);
 						}
-						if (Part!=null)
-							Part(this, new PartEventArgs(channels.GetChannel(e.Parameters[0]), users.GetUser(user), e.Parameters.Length>1?e.Parameters[1]:""));
+						partedChannel.FirePart(partedUser, e.Parameters.Length>1?e.Parameters[1]:"");
+						if (user.Nick.ToLower() == strNickname.ToLower())
+							channels.FirePartCompleted(partedChannel);
 						break;
 #endregion
 #region KICK
 					case "kick":
 						EnsureInformation(user);
-						if (BeforeKick!=null)
-							BeforeKick(this, new KickEventArgs(users.GetUser(user), channels.GetChannel(e.Parameters[0]), e.Parameters[1], e.Parameters[2]));
+						
+						User kicker = users.GetUser(user);
+						User kicked = users.GetUser(e.Parameters[1]);
+						Channel kickedChannel = channels.GetChannel(e.Parameters[0]);
+						
 						if (e.Parameters[1].ToLower()==strNickname.ToLower())
 						{
-							foreach (ChannelUser u in channels.GetChannel(e.Parameters[0]).Users)
+							foreach (ChannelUser u in kickedChannel.Users)
 								if (!channels.IsUserOnAnyChannel(u.User.Nick, e.Parameters[0]))
 									users.Remove(u.User.Nick);
 							channels.RemoveChannel(e.Parameters[0]);
 						}
 						else
 						{
-							channels[e.Parameters[0]].Users.RemoveUser(e.Parameters[1]);
+							kickedChannel.Users.RemoveUser(e.Parameters[1]);
 							if (!channels.IsUserOnAnyChannel(e.Parameters[1]))
 							    users.Remove(e.Parameters[1]);
 						}
-						if (Kick!=null)
-							Kick(this, new KickEventArgs(users.GetUser(user), channels.GetChannel(e.Parameters[0]), e.Parameters[1], e.Parameters[2]));
+						kickedChannel.FireKick(kicker, kicked, e.Parameters[2]);
 						break;
 #endregion
 #region QUIT
 					case "quit":
 						EnsureInformation(user);
-						if (BeforeQuit!=null)
-							BeforeQuit(this, new QuitEventArgs(users.GetUser(user), e.Parameters[0]));
+						
+						User quittedUser = users.GetUser(user);
 						
 						for (int x=0;x<channels.Count;x++)
 							for (int y=0;y<channels[x].Users.Count;y++)
@@ -728,13 +719,10 @@ namespace IRC
 							users.Remove(user.Nick);
 							
 						
-						if (Quit!=null)
-							Quit(this, new QuitEventArgs(users.GetUser(user), e.Parameters[0]));
+						quittedUser.FireQuitted(e.Parameters[0]);
 						
 						if (user.Nick.ToLower()==strNickname.ToLower())
 						{
-							if (BeforeDisconnect!=null)
-								BeforeDisconnect(this, new EventArgs());
 							ShutdownClient();
 							if (Disconnected!=null)
 								Disconnected(this, new EventArgs());
@@ -744,23 +732,22 @@ namespace IRC
 #region NICK
 					case "nick":
 						EnsureInformation(user);
-						if (BeforeNickChange!=null)
-							BeforeNickChange(this, new BeforeNickChangeEventArgs(users.GetUser(user), e.Parameters[0]));
+						User nickChanger = users.GetUser(user);
+						nickChanger.FireNickChange(e.Parameters[0]);
 						if (user.Nick.ToLower() == strNickname.ToLower())
 						{
 							strNickname = e.Parameters[0];
 							users.OwnNick = strNickname;
 						}
-						users.GetUser(user.Nick).Nick = e.Parameters[0];
-						if (NickChange!=null)
-							NickChange(this, new NickChangeEventArgs(users.GetUser(user), user.Nick));
+						string oldNick = nickChanger.Nick;
+						nickChanger.Nick = e.Parameters[0];
+						nickChanger.FireNickChange(oldNick);
 						break;
 #endregion
 #region INVITE
 					case "invite":
 						EnsureInformation(user);
-						if (Invitation!=null)
-							Invitation(this, new InvitationEventArgs(users.GetUser(user), e.Parameters[1]));
+						channels.FireInvitation(users.GetUser(user), e.Parameters[1]);
 						break;
 #endregion
 #region PRIVMSG
@@ -768,12 +755,9 @@ namespace IRC
 						EnsureInformation(user);
 						CheckVoice(e.Parameters[0], user);
 						if (e.Parameters[1].Length>2&&e.Parameters[1][0]==1&&e.Parameters[1][e.Parameters[1].Length - 1]==1) // Is CTCP
-							ParseCTCP(user, e.Parameters[0], e.Parameters[1].Substring(1, e.Parameters[1].Length - 2), false);
+							ParseCTCP(user, GetMessageReciever(e.Parameters[0]), e.Parameters[1].Substring(1, e.Parameters[1].Length - 2), false);
 						else
-						{
-							if (Message!=null)
-								Message(this, new MessageEventArgs(Users.GetUser(user), GetMessageReciever(e.Parameters[0]), e.Parameters[1]));
-						}
+							GetMessageReciever(e.Parameters[0]).FireRecievedMessage(users.GetUser(user), e.Parameters[1], false);
 						break;
 #endregion
 #region NOTICE
@@ -783,12 +767,9 @@ namespace IRC
 						{
 							CheckVoice(e.Parameters[0], user);
 							if (e.Parameters[1].Length > 2 && e.Parameters[1][0] == 1 && e.Parameters[1][e.Parameters[1].Length - 1] == 1) // Is CTPCP
-								ParseCTCP(user, e.Parameters[0], e.Parameters[1].Substring(1, e.Parameters[1].Length - 2), true);
+								ParseCTCP(user, GetMessageReciever(e.Parameters[0]), e.Parameters[1].Substring(1, e.Parameters[1].Length - 2), true);
 							else
-							{
-								if (Notice != null)
-									Notice(this, new MessageEventArgs(users.GetUser(user), GetMessageReciever(e.Parameters[0]), e.Parameters[1]));
-							}
+								GetMessageReciever(e.Parameters[0]).FireRecievedNotice(users.GetUser(user), e.Parameters[1]);
 						}
 						break;
 #endregion
@@ -816,30 +797,28 @@ namespace IRC
 			{
 				switch (strParts[0][x])
 				{
-					case '+':
-						blWay = true;
-						break;
-					case '-':
-						blWay = false;
-						break;
-					case 'o':
-						if (UserOpStatusChange!=null)
-							UserOpStatusChange(this, new UserModeEventArgs(users.GetUser(user), channels.GetChannel(ChannelName), users.GetUser(strParts[cParam++]), blWay));
-						break;
-					case 'v':
-						if (UserVoiceStatusChange!=null)
-							UserVoiceStatusChange(this, new UserModeEventArgs(users.GetUser(user), channels.GetChannel(ChannelName), users.GetUser(strParts[cParam++]), blWay));
-						break;
-					case 'l':
-					case 'k':
-						cParam++;
-						break;
+				case '+':
+					blWay = true;
+					break;
+				case '-':
+					blWay = false;
+					break;
+				case 'o':
+					channels.GetChannel(ChannelName).FireUserOpStatusChanged(users.GetUser(user), users.GetUser(strParts[cParam++]), blWay);
+					break;
+				case 'v':
+					channels.GetChannel(ChannelName).FireUserVoiceStatusChanged(users.GetUser(user), users.GetUser(strParts[cParam++]), blWay);
+					break;
+				case 'l':
+				case 'k':
+					cParam++;
+					break;
 				}
 			}
 		}
 		#endregion
 		#region ParseCTCP
-		private void ParseCTCP(UserInfo user, string Target, string CTCPData, bool blNotice)
+		private void ParseCTCP(UserInfo user, MessageReciever Target, string CTCPData, bool blNotice)
 		{
 			CTCPData = CTCPData.Trim();
 			string strCommand = "";
@@ -858,127 +837,126 @@ namespace IRC
 				#region CtCp Requests
 				switch (strCommand.ToLower())
 				{
-					case "ping":
-						base.CurrentConnection.SendData("NOTICE " + user.Nick + " :\x01PING " + strParams + "\x01", false);
-						break;
-					case "version":
-					    string clientInfo = "TNets IRC Library v.0.7";
-					    if (this.CtCpVersionNeedsClientInfo != null)
-						   clientInfo = this.CtCpVersionNeedsClientInfo(this, new EventArgs());
-						base.CurrentConnection.SendData("NOTICE " + user.Nick + " :\x01VERSION " + clientInfo + "\x01", false);
-						break;
-					case "finger":
-						TimeSpan time = (TimeSpan) DateTime.Now.Subtract(base.CurrentConnection.LastActive);
-						string strReadable = "";
-						#region Calculate readable idle time
-						if (time.TotalSeconds>60)
+				case "ping":
+					base.CurrentConnection.SendData("NOTICE " + user.Nick + " :\x01PING " + strParams + "\x01", false);
+					break;
+				case "version":
+					string clientInfo = "TNets IRC Library v.0.7";
+					if (this.CtCpVersionNeedsClientInfo != null)
+						clientInfo = this.CtCpVersionNeedsClientInfo(this, new EventArgs());
+					base.CurrentConnection.SendData("NOTICE " + user.Nick + " :\x01VERSION " + clientInfo + "\x01", false);
+					break;
+				case "finger":
+					TimeSpan time = (TimeSpan) DateTime.Now.Subtract(base.CurrentConnection.LastActive);
+					string strReadable = "";
+#region Calculate readable idle time
+					if (time.TotalSeconds>60)
+					{
+						string strHours = "";
+						string strMinutes = "";
+						string strSeconds = "";
+						if (time.Hours>0)
 						{
-							string strHours = "";
-							string strMinutes = "";
-							string strSeconds = "";
-							if (time.Hours>0)
-							{
-								if (time.Hours>1)
-									strHours = time.Hours.ToString() + " hours ";
-								else
-									strHours = time.Hours.ToString() + " hour ";
-							}
-							if (time.Minutes>0)
-							{
-								if (time.Minutes>1)
-									strMinutes = time.Minutes.ToString() + " minutes ";
-								else
-									strMinutes = time.Minutes.ToString() + " minute ";
-							}
-							if (time.Seconds>0)
-							{
-								if (time.Seconds>1)
-									strSeconds = time.Seconds.ToString() + " seconds ";
-								else
-									strSeconds = time.Seconds.ToString() + " second ";
-							}
-							strReadable = strHours + strMinutes + strSeconds;
-							strReadable = " (" + strReadable.Trim() + ")";
+							if (time.Hours>1)
+								strHours = time.Hours.ToString() + " hours ";
+							else
+								strHours = time.Hours.ToString() + " hour ";
 						}
-						#endregion
-						base.CurrentConnection.SendData("NOTICE " + user.Nick + " :\x01" + "FINGER Idle " + Math.Floor(time.TotalSeconds).ToString() + " seconds" + strReadable + "\x01", false);
-						break;
-					case "time":
-						base.CurrentConnection.SendData("NOTICE " + user.Nick + " :\x01TIME " + mIRCDateTime(DateTime.Now) + "\x01", false);
-						break;
-					case "action":
-						if (Message!=null)
-							Message(this, new MessageEventArgs(users.GetUser(user), GetMessageReciever(Target), strParams, true));
-						break;
-					case "dcc":
+						if (time.Minutes>0)
+						{
+							if (time.Minutes>1)
+								strMinutes = time.Minutes.ToString() + " minutes ";
+							else
+								strMinutes = time.Minutes.ToString() + " minute ";
+						}
+						if (time.Seconds>0)
+						{
+							if (time.Seconds>1)
+								strSeconds = time.Seconds.ToString() + " seconds ";
+							else
+								strSeconds = time.Seconds.ToString() + " second ";
+						}
+						strReadable = strHours + strMinutes + strSeconds;
+						strReadable = " (" + strReadable.Trim() + ")";
+					}
+#endregion
+					base.CurrentConnection.SendData("NOTICE " + user.Nick + " :\x01" + "FINGER Idle " + Math.Floor(time.TotalSeconds).ToString() + " seconds" + strReadable + "\x01", false);
+					break;
+				case "time":
+					base.CurrentConnection.SendData("NOTICE " + user.Nick + " :\x01TIME " + mIRCDateTime(DateTime.Now) + "\x01", false);
+					break;
+				case "action":
+					Target.FireRecievedMessage(users.GetUser(user), strParams, true);
+					break;
+				case "dcc":
+					if (Target.GetType() == typeof(User))
+					{
+						User userTarget = (User) Target;
 						string[] strDccParams = strParams.Split(new char[] {' '});
 						if (strDccParams.Length>=4)
 						{
 							switch (strDccParams[0].ToLower())
 							{
-								case "chat":
-									DCCChat newChat = new DCCChat(base.CurrentConnection, long.Parse(strDccParams[2]), int.Parse(strDccParams[3]), user.Nick, dcc.Chats);
-									dcc.Chats.AddDcc(newChat);
-									if (DCCChatRequest!=null)
-										DCCChatRequest(this, new DCCChatRequestEventArgs(users.GetUser(user), newChat));
-									break;
-								case "send":
-									DCCTransfer newTransfer = new DCCTransfer(base.CurrentConnection, long.Parse(strDccParams[2]), int.Parse(strDccParams[3]), user.Nick, strDccParams[1], long.Parse(strDccParams[4]), dcc.Transfer);
-									dcc.Transfer.AddDcc(newTransfer);
-									if (DCCTransferRequest!=null)
-										DCCTransferRequest(this, new DCCTransferRequestEventArgs(users.GetUser(user), newTransfer));
-									break;
-								case "accept":
-									for (int x=0;x<dcc.Transfer.Count;x++)
-										if (dcc.Transfer[x].Identifier==int.Parse(strDccParams[2]))
-										{
-											dcc.Transfer[x].ResumeAccepted(long.Parse(strDccParams[3]));
-											break;
-										}
-									break;
-								case "resume":
-									for (int x=0;x<dcc.Transfer.Count;x++)
-										if (dcc.Transfer[x].Identifier==int.Parse(strDccParams[2]))
-										{
-											dcc.Transfer[x].ResumeRequested(long.Parse(strDccParams[3]));
-											break;
-										}
-									break;
+							case "chat":
+								DCCChat newChat = new DCCChat(base.CurrentConnection, long.Parse(strDccParams[2]), int.Parse(strDccParams[3]), user.Nick, dcc.Chats);
+								dcc.Chats.AddDcc(newChat);
+								userTarget.FireDCCChatRequest(newChat);
+								break;
+							case "send":
+								DCCTransfer newTransfer = new DCCTransfer(base.CurrentConnection, long.Parse(strDccParams[2]), int.Parse(strDccParams[3]), user.Nick, strDccParams[1], long.Parse(strDccParams[4]), dcc.Transfer);
+								dcc.Transfer.AddDcc(newTransfer);
+								userTarget.FireDCCTransferRequest(newTransfer);
+								break;
+							case "accept":
+								for (int x=0;x<dcc.Transfer.Count;x++)
+								{
+									if (dcc.Transfer[x].Identifier==int.Parse(strDccParams[2]))
+									{
+										dcc.Transfer[x].ResumeAccepted(long.Parse(strDccParams[3]));
+										break;
+									}
+								}
+								break;
+							case "resume":
+								for (int x=0;x<dcc.Transfer.Count;x++)
+								{
+									if (dcc.Transfer[x].Identifier==int.Parse(strDccParams[2]))
+									{
+										dcc.Transfer[x].ResumeRequested(long.Parse(strDccParams[3]));
+										break;
+									}
+								}
+								break;
 							}
 						}
-						break;
-					default:
-						if (CtCpMessage!=null)
-							CtCpMessage(this, new CtCpMessageEventArgs(users.GetUser(user), strCommand, strParams));
-						break;
+					}
+					break;
+				default:
+					Target.FireRecievedCtCpMessage(users.GetUser(user), strCommand, strParams);
+					break;
 				}
-				#endregion
+#endregion
 			}
 			else
 			{
 				#region CtCp Responses
 				switch (strCommand.ToLower())
 				{
-					case "ping":
-						if (CtCpPingReply!=null)
-							CtCpPingReply(this, new CtCpPingReplyEventArgs(users.GetUser(user), new TimeSpan(TimeSpan.TicksPerMillisecond * long.Parse(strParams))));
-						break;
-					case "time":
-						if (CtCpTimeReply!=null)
-							CtCpTimeReply(this, new CtCpReplyEventArgs(users.GetUser(user), strParams));
-						break;
-					case "finger":
-						if (CtCpFingerReply!=null)
-							CtCpFingerReply(this, new CtCpReplyEventArgs(users.GetUser(user), strParams));
-						break;
-					case "version":
-						if (CtCpVersionReply!=null)
-							CtCpVersionReply(this, new CtCpReplyEventArgs(users.GetUser(user), strParams));
-						break;
-					default:
-						if (CtCpReply!=null)
-							CtCpReply(this, new CtCpCommandReplyEventArgs(users.GetUser(user), strCommand, strParams));
-						break;
+				case "ping":
+					users.GetUser(user).FireCtCpPingReplied(new TimeSpan(TimeSpan.TicksPerMillisecond * long.Parse(strParams)));
+					break;
+				case "time":
+					users.GetUser(user).FireCtCpTimeReplied(strParams);
+					break;
+				case "finger":
+					users.GetUser(user).FireCtCpFingerReplied(strParams);
+					break;
+				case "version":
+					users.GetUser(user).FireCtCpVersionReplied(strParams);
+					break;
+				default:
+					users.GetUser(user).FireCtCpReplied(strCommand, strParams);
+					break;
 				}
 				#endregion
 			}
@@ -1039,15 +1017,5 @@ namespace IRC
 			return strWeekNames[(int) dt.DayOfWeek] + " " + strMonthNames[dt.Month - 1] + " " + dt.Day.ToString().PadLeft(2, '0') + " " + dt.Hour.ToString().PadLeft(2, '0') + ":" + dt.Minute.ToString().PadLeft(2, '0') + ":" + dt.Second.ToString().PadLeft(2, '0') + " " + dt.Year.ToString();
 		}
 		#endregion
-		private void NewUserAdded(object user, EventArgs e)
-		{
-			((User)user).InfoUpdated += iUserInfoUpdated; 
-		}
-		
-		internal void iUserInfoUpdated(object user, EventArgs e)
-		{
-			if (UserInfoUpdated != null)
-				UserInfoUpdated(this, new UserEventArgs((User)user));
-		}
     }
 }
