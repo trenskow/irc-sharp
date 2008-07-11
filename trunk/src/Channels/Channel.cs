@@ -96,6 +96,7 @@ namespace IRC
 		/// <remarks>When this event is fired by the Connection, it is fired in another thread then the original thread 
 		/// that created the class. Because of this you need to use the Invoke() method on your form if you're creating using Windows forms.</remarks>
 		public event UserModeEventHandler UserVoiceStatusChange;
+		public event TopicChangedEventHandler TopicChanged;
 
 		#region Constructors
 		internal Channel(ServerConnection creatorsCurrentConnection, string Name) : base(creatorsCurrentConnection, Name, true)
@@ -294,6 +295,7 @@ namespace IRC
 		public DateTime TopicSetTime
 		{
 			get { return dtTopicSet; }
+			internal set { dtTopicSet = value; }
 		}
 
 		/// <summary>
@@ -302,17 +304,12 @@ namespace IRC
 		public string TopicBy
 		{
 			get { return strTopicBy; }
+			internal set { strTopicBy = value; }
 		}
 
 		internal void SetTopic(string Topic)
 		{
 			strTopic = Topic;
-		}
-
-		internal void SetTopicSetBy(string TopicBy, DateTime setTime)
-		{
-			strTopicBy = TopicBy;
-			dtTopicSet = setTime;
 		}
 		#endregion
 		#region SetMode
@@ -418,6 +415,12 @@ namespace IRC
 		{
 			if (this.UserVoiceStatusChange != null)
 				this.UserVoiceStatusChange(this, new UserModeEventArgs(user, victim, way));
+		}
+		
+		internal void FireTopicChanged(User user, string topic)
+		{
+			if (this.TopicChanged != null)
+				this.TopicChanged(this, new TopicChangedEventArgs(user, topic));
 		}
 	}
 }

@@ -641,4 +641,27 @@ namespace IRC
 		}
 	}
 #endregion
+#region
+	public class TopicChangedEventArgs
+	{
+		private User _setter;
+		private string _topic;
+		
+		internal TopicChangedEventArgs(User __setter, string __topic)
+		{
+			_setter = __setter;
+			_topic = __topic;
+		}
+		
+		public User User
+		{
+			get { return _setter; }
+		}
+		
+		public string Topic
+		{
+			get { return _topic; }
+		}
+	}
+#endregion
 }
