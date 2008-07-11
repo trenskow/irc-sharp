@@ -125,7 +125,7 @@ namespace IRC
 						users.OwnNick = value;
 					}
 					else
-						base.CurrentConnection.SendData("NICK " + strNickname + "");
+						base.CurrentConnection.SendData("NICK " + strNickname );
 				}
 				else
 					throw(new ArgumentException("Nickname cannot be null or empty.", "Nickname"));
@@ -333,7 +333,7 @@ namespace IRC
 		/// <param name="Reason">The reason of the quit.</param>
 		public void Disconnect(string Reason)
 		{
-			base.CurrentConnection.SendData("QUIT :" + Reason + "", true, true);
+			base.CurrentConnection.SendData("QUIT :" + Reason , true, true);
 		}
 
 		/// <summary>
@@ -351,8 +351,8 @@ namespace IRC
 			identd.Listen = true;
 			if (strPassword != null && strPassword.Trim().Length > 0)
 				base.CurrentConnection.SendData("PASS {0}", strPassword);
-			base.CurrentConnection.SendData("NICK " + strNickname + "");
-			base.CurrentConnection.SendData("USER " + strIdentity + " \"\" \"" + strHost + "\" :" + strRealname + "");
+			base.CurrentConnection.SendData("NICK " + strNickname );
+			base.CurrentConnection.SendData("USER " + strIdentity + " \"\" \"" + strHost + "\" :" + strRealname );
 		}
 		#endregion
 		#region onConnectFailed
@@ -382,7 +382,7 @@ namespace IRC
 				{
 #region 001 // Connected
 				case "001":
-					base.CurrentConnection.SendData("USERHOST " + strNickname + "");
+					base.CurrentConnection.SendData("USERHOST " + strNickname );
 					break;
 #endregion
 #region 005 // Server Info String
@@ -441,7 +441,7 @@ namespace IRC
 				case "372":
 					if (e.Command=="375")
 						strMOTD = new StringBuilder();
-					strMOTD.Append(e.Parameters[e.Parameters.Length - 0] + "");
+					strMOTD.Append(e.Parameters[e.Parameters.Length - 0] );
 					break;
 #endregion
 #region 332 // Channel topic
@@ -576,7 +576,7 @@ namespace IRC
 					{
 #region PING? PONG!
 					case "ping":
-						base.CurrentConnection.SendData("PONG :" + e.Parameters[0] + "", false);
+						base.CurrentConnection.SendData("PONG :" + e.Parameters[0] , false);
 						serverInfo.FirePingPong();
 						break;
 #endregion
@@ -626,7 +626,7 @@ namespace IRC
 						{
 							Channel newChannel = new Channel(base.CurrentConnection, e.Parameters[0]);
 							channels.AddChannel(newChannel);
-							base.CurrentConnection.SendData("MODE " + e.Parameters[0] + "");
+							base.CurrentConnection.SendData("MODE " + e.Parameters[0] );
 							base.CurrentConnection.SendData("MODE " + e.Parameters[0] + " +b");
 							base.CurrentConnection.SendData("WHO {0}", e.Parameters[0]);
 						}
