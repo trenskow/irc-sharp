@@ -204,7 +204,7 @@ namespace IRC
 		/// <param name="ChannelName">Channel name to invite user to.</param>
 		public void Invite(string ChannelName)
 		{
-			base.CurrentConnection.SendData("INVITE " + strNick + " " + ChannelName );
+			base.CurrentConnection.SendData("INVITE " + strNick + " " + ChannelName);
 		}
 		
 		internal void FireDCCChatRequest(DCCChat newChat)
