@@ -777,13 +777,16 @@ namespace IRC
 #endregion
 				}
 			}
+			
+			if (e.Raw != null)
+				serverInfo.FireRawRecieve(e.Raw);
 		}
 #endregion
 #region CheckVoice
 		private void CheckVoice(string ChannelName, UserInfo user)
 		{
 			if (channels.IsOnChannel(ChannelName)&&channels[ChannelName].Moderated&&!channels[ChannelName].Users[user.Nick].IsVoiced)
-				onData(base.CurrentConnection, new OnDataEventArgs(strHost, "MODE", new string[] {ChannelName, "+v", user.Nick}, false));
+				onData(base.CurrentConnection, new OnDataEventArgs(strHost, "MODE", new string[] {ChannelName, "+v", user.Nick}, false, null));
 		}
 		#endregion
 		#region CheckUserChannelStatus

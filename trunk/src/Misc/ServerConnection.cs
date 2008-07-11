@@ -41,17 +41,19 @@ namespace IRC
 		private string[] strParameters;
 		private bool blIsServerMessage;
 		private int intdescriptionBeginsAtIndex;
+		private string strRaw;
 
-		internal OnDataEventArgs(string user, string command, string[] parameters, int descriptionBeginsAtIndex, bool isServerMessage)
+		internal OnDataEventArgs(string user, string command, string[] parameters, int descriptionBeginsAtIndex, bool isServerMessage, string raw)
 		{
 			strUser = user;
 			strCommand = command;
 			strParameters = parameters;
 			intdescriptionBeginsAtIndex = descriptionBeginsAtIndex;
 			blIsServerMessage = isServerMessage;
+			strRaw = raw;
 		}
 
-		internal OnDataEventArgs(string user, string command, string[] parameters, bool isServerMessage) : this(user, command, parameters, -1, isServerMessage)
+		internal OnDataEventArgs(string user, string command, string[] parameters, bool isServerMessage, string raw) : this(user, command, parameters, -1, isServerMessage, raw)
 		{
 		}
 
@@ -89,6 +91,11 @@ namespace IRC
 		internal bool IsServerMessage
 		{
 			get { return blIsServerMessage; }
+		}
+		
+		internal string Raw
+		{
+			get { return strRaw; }
 		}
 	}
 	#endregion
@@ -249,7 +256,7 @@ namespace IRC
 							}
 							
 							if (OnDataReceived != null)
-								OnDataReceived(this, new OnDataEventArgs(strUser, strCommand, strParams, descriptionBeginsAtIndex, true));
+								OnDataReceived(this, new OnDataEventArgs(strUser, strCommand, strParams, descriptionBeginsAtIndex, true, strLines[x]));
 						}
 						else
 						{
@@ -279,7 +286,7 @@ namespace IRC
 								strParams[strParams.Length - 1] = strParam;
 							
 							if (OnDataReceived != null)
-								OnDataReceived(this, new OnDataEventArgs(strUser, strCommand, strParams, blIsServerMessage));
+								OnDataReceived(this, new OnDataEventArgs(strUser, strCommand, strParams, blIsServerMessage, strLines[x]));
 						}
                     }
                     else
@@ -305,7 +312,7 @@ namespace IRC
                             strParams[strParams.Length - 1] = strParam;
 
                         if (OnDataReceived != null)
-                            OnDataReceived(this, new OnDataEventArgs(null, strCommand, strParams, false));
+                            OnDataReceived(this, new OnDataEventArgs(null, strCommand, strParams, false, strLines[x]));
                     }
                 }
 			}
