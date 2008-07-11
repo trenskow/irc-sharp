@@ -69,7 +69,7 @@ namespace IRC
 		/// <param name="Message">The message to send.</param>
 		public void SendMessage(string Message)
 		{
-			SendData(Message);
+			SendData(Message + Environment.NewLine);
 		}
 
 		/// <summary>
