@@ -451,7 +451,9 @@ namespace IRC
 #endregion
 #region 333 // Channel topic set time
 				case "333":
-					channels[e.Parameters[0]].SetTopicSetBy(e.Parameters[1], IRCDateTime(e.Parameters[2]));
+					Channel topicChannel = channels[e.Parameters[0]];
+					topicChannel.TopicBy = e.Parameters[1];
+					topicChannel.TopicSetTime = IRCDateTime(e.Parameters[2]);
 					break;
 #endregion
 #region 353 // Names in channel
@@ -785,6 +787,17 @@ namespace IRC
 							else
 								GetMessageReciever(e.Parameters[0]).FireRecievedNotice(users.GetUser(user), e.Parameters[1]);
 						}
+						break;
+#endregion
+#region TOPIC
+					case "topic":
+						EnsureInformation(user);
+						CheckVoice(e.Parameters[0], user);
+						Channel topicChannel = channels.GetChannel(e.Parameters[0]);
+						topicChannel.SetTopic(e.Parameters[1]);
+						topicChannel.TopicBy = user.Nick;
+						topicChannel.TopicSetTime = DateTime.Now;
+						topicChannel.FireTopicChanged(users.GetUser(user), e.Parameters[1]);
 						break;
 #endregion
 					}

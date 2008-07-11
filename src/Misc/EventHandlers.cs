@@ -145,6 +145,7 @@ namespace IRC
 	public delegate void UserInfoEventHandler(User sender, EventArgs e);
 	public delegate void UnknownUserEmergedEventHandler(Connection sender, UnknownUserEmergedEventArgs e);
 	public delegate void RawDataEventHandler(Connection sender, RawDataEventArgs e);
+	public delegate void TopicChangedEventHandler(Channel sender, TopicChangedEventArgs e);
 	#endregion
 }
 	
