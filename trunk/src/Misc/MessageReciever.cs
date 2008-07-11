@@ -165,7 +165,7 @@ namespace IRC
 			if (Action)
 				base.CurrentConnection.SendData("PRIVMSG " + strNetworkIdentifier + " :\x01" + "ACTION " + Message + "\x01");
 			else
-				base.CurrentConnection.SendData("PRIVMSG " + strNetworkIdentifier + " :" + Message + "");
+				base.CurrentConnection.SendData("PRIVMSG " + strNetworkIdentifier + " :" + Message );
 		}
 
 		/// <summary>
@@ -174,7 +174,7 @@ namespace IRC
 		/// <param name="Message">The message to notice.</param>
 		public void Notice(string Message)
 		{
-			base.CurrentConnection.SendData("NOTICE " + strNetworkIdentifier + " :" + Message + "");
+			base.CurrentConnection.SendData("NOTICE " + strNetworkIdentifier + " :" + Message );
 		}
 		
 		internal void FireRecievedMessage(User user, string message, bool isAction)

@@ -188,7 +188,7 @@ namespace IRC
 					{
 						string[] strPorts = strData.Split(new char[] {','});
 						if (strPorts.Length==2&&strPorts[0].Trim()==base.CurrentConnection.LocalPort.ToString()&&strPorts[1].Trim()==base.CurrentConnection.RemotePort.ToString())
-							SendData(strData + " : Identity : " + strOS + " : " + ircParent.Identity + "", so.socket, true);
+							SendData(strData + " : Identity : " + strOS + " : " + ircParent.Identity , so.socket, true);
 						else
 							SendData(strData + " : ERROR : NO-USER", so.socket, false);
 					}
