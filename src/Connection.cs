@@ -60,6 +60,7 @@ namespace IRC
 		private string strNickname = "";
 		private string strIdentity = "";
 		private string strRealname = "-";
+		private string strPassword = "";
 		private string strHost = "";
 		private int intPort = 0;
 		private System.Net.IPAddress myIP = System.Net.IPAddress.Loopback;
@@ -163,7 +164,18 @@ namespace IRC
 				if (!base.CurrentConnection.IsConnected)
 					strRealname = value;
 				else
-					throw(new Exception("Cannot change Realname while connected."));
+					throw(new Exception("Cannot change RealName while connected."));
+			}
+		}
+		
+		public string Password
+		{
+			get { return strPassword; }
+			set {
+				if (!base.CurrentConnection.IsConnected)
+					strPassword = value;
+				else
+					throw(new Exception("Cannot change Password while connected."));
 			}
 		}
         #endregion
@@ -337,6 +349,8 @@ namespace IRC
 		private void onConnected(object sender, EventArgs e)
 		{
 			identd.Listen = true;
+			if (strPassword != null && strPassword.Trim().Length > 0)
+				base.CurrentConnection.SendData("PASS {0}", strPassword);
 			base.CurrentConnection.SendData("NICK " + strNickname + "");
 			base.CurrentConnection.SendData("USER " + strIdentity + " \"\" \"" + strHost + "\" :" + strRealname + "");
 		}
