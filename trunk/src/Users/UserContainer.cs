@@ -26,7 +26,7 @@ namespace IRC
 		string strOwnNick;
 		int _curr;
 		
-		internal event EventHandler NewUserAdded;
+		public event UnknownUserEmergedEventHandler UnknownUserEmerged;
 		
 		internal UserContainer(ServerConnection creatorsServerConnection) : base(creatorsServerConnection)
 		{
@@ -81,8 +81,8 @@ namespace IRC
 			
 			User ret = new User(base.CurrentConnection, Nick, askWho);
 			users.Add(ret);
-			if (NewUserAdded != null)
-				NewUserAdded(ret, new EventArgs());
+			if (this.UnknownUserEmerged != null)
+				this.UnknownUserEmerged(base.CurrentConnection.Owner, new UnknownUserEmergedEventArgs(ret));
 			return ret;
 		}
 		
@@ -99,8 +99,6 @@ namespace IRC
 			
 			User ret = new User(base.CurrentConnection, user.Nick, user.Identity, user.Host, true);
 			users.Add(ret);
-			if (NewUserAdded != null)
-				NewUserAdded(ret, new EventArgs());
 			return ret;
 		}
 				

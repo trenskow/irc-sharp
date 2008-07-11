@@ -85,7 +85,7 @@ namespace IRC
 				return string.Join(" ", ret);
 			}
 		}
-
+		
 		internal bool IsServerMessage
 		{
 			get { return blIsServerMessage; }
@@ -101,6 +101,7 @@ namespace IRC
 		private Socket socket;
 
 		private DateTime dtLastActive = DateTime.Now;
+		private Connection objOwner;
 		#endregion
 		#region Events
 		internal event EventHandler OnConnected;
@@ -404,5 +405,11 @@ namespace IRC
 			}
 		}
 		#endregion
+
+		internal Connection Owner
+		{
+			get { return objOwner; }
+			set { objOwner = value; }
+		}
 	}
 }

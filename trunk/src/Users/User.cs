@@ -27,7 +27,97 @@ namespace IRC
 		private string strRealName;
 		private string strUsingServer;
 		
-		internal event EventHandler InfoUpdated;
+		/// <summary>
+		/// Occures when a user send a request for a DCC chat.
+		/// </summary>
+		/// <seealso cref="DCCChatRequestEventArgs"/>
+		/// <threadsafe instance="false"/>
+		/// <remarks>When this event is fired by the Connection, it is fired in another thread then the original thread 
+		/// that created the class. Because of this you need to use the Invoke() method on your form if you're creating using Windows forms.</remarks>
+		public event DCCChatRequestEventHandler DCCChatRequested;
+
+		/// <summary>
+		/// Occures when a user send a file.
+		/// </summary>
+		/// <seealso cref="DCCTransferRequestEventArgs"/>
+		/// <threadsafe instance="false"/>
+		/// <remarks>When this event is fired by the Connection, it is fired in another thread then the original thread 
+		/// that created the class. Because of this you need to use the Invoke() method on your form if you're creating using Windows forms.</remarks>
+		public event DCCTransferRequestEventHandler DCCTransferRequested;
+
+		/// <summary>
+		/// Occurs when a user replyes a CtCp message.
+		/// </summary>
+		/// <seealso cref="CtCpCommandReplyEventArgs"/>
+		/// <threadsafe instance="false"/>
+		/// <remarks>When this event is fired by the Connection, it is fired in another thread then the original thread 
+		/// that created the class. Because of this you need to use the Invoke() method on your form if you're creating using Windows forms.</remarks>
+		public event CtCpCommandReplyEventHandler CtCpReplied;
+
+		/// <summary>
+		/// Occurs when a user replyes a CtCp ping request.
+		/// </summary>
+		/// <seealso cref="CtCpPingReplyEventArgs"/>
+		/// <threadsafe instance="false"/>
+		/// <remarks>When this event is fired by the Connection, it is fired in another thread then the original thread 
+		/// that created the class. Because of this you need to use the Invoke() method on your form if you're creating using Windows forms.</remarks>
+		public event CtCpPingReplyEventHandler CtCpPingReplied;
+
+		/// <summary>
+		/// Occurs when a user replies a CtCp version request.
+		/// </summary>
+		/// <seealso cref="CtCpReplyEventArgs"/>
+		/// <threadsafe instance="false"/>
+		/// <remarks>When this event is fired by the Connection, it is fired in another thread then the original thread 
+		/// that created the class. Because of this you need to use the Invoke() method on your form if you're creating using Windows forms.</remarks>
+		public event CtCpReplyEventHandler CtCpVersionReplied;
+
+		/// <summary>
+		/// Occurs when a user replyes a CtCp finger request.
+		/// </summary>
+		/// <seealso cref="CtCpReplyEventArgs"/>
+		/// <threadsafe instance="false"/>
+		/// <remarks>When this event is fired by the Connection, it is fired in another thread then the original thread 
+		/// that created the class. Because of this you need to use the Invoke() method on your form if you're creating using Windows forms.</remarks>
+		public event CtCpReplyEventHandler CtCpFingerReplied;
+
+		/// <summary>
+		/// Occurs when a user replyes a CtCp time request.
+		/// </summary>
+		/// <seealso cref="CtCpReplyEventArgs"/>
+		/// <threadsafe instance="false"/>
+		/// <remarks>When this event is fired by the Connection, it is fired in another thread then the original thread 
+		/// that created the class. Because of this you need to use the Invoke() method on your form if you're creating using Windows forms.</remarks>
+		public event CtCpReplyEventHandler CtCpTimeReplied;
+
+		/// <summary>
+		/// Occurs when a user disconnects from the IRC server.
+		/// </summary>
+		/// <seealso cref="QuitEventArgs"/>
+		/// <threadsafe instance="false"/>
+		/// <remarks>When this event is fired by the Connection, it is fired in another thread then the original thread 
+		/// that created the class. Because of this you need to use the Invoke() method on your form if you're creating using Windows forms.</remarks>
+		public event QuitEventHandler Quitted;
+
+		/// <summary>
+		/// Occurs when a user changes his nick, but before the nick is changed in the Channels array.
+		/// </summary>
+		/// <seealso cref="NickChangeEventArgs"/>
+		/// <threadsafe instance="false"/>
+		/// <remarks>When this event is fired by the Connection, it is fired in another thread then the original thread 
+		/// that created the class. Because of this you need to use the Invoke() method on your form if you're creating using Windows forms.</remarks>
+		public event BeforeNickChangeEventHandler BeforeNickChange;
+
+		/// <summary>
+		/// Occurs when a user changes his nick.
+		/// </summary>
+		/// <seealso cref="NickChangeEventArgs"/>
+		/// <threadsafe instance="false"/>
+		/// <remarks>When this event is fired by the Connection, it is fired in another thread then the original thread 
+		/// that created the class. Because of this you need to use the Invoke() method on your form if you're creating using Windows forms.</remarks>
+		public event NickChangeEventHandler NickChange;
+
+		public event UserInfoEventHandler InfoUpdated;
 		
 		internal User(ServerConnection creatorsServerConnection, string Nick, string Identity, string Host, string RealName) : base(creatorsServerConnection, Nick)
 		{
@@ -115,6 +205,66 @@ namespace IRC
 		public void Invite(string ChannelName)
 		{
 			base.CurrentConnection.SendData("INVITE " + strNick + " " + ChannelName + "");
+		}
+		
+		internal void FireDCCChatRequest(DCCChat newChat)
+		{
+			if (this.DCCChatRequested != null)
+				this.DCCChatRequested(this, new DCCChatRequestEventArgs(newChat));
+		}
+		
+		internal void FireDCCTransferRequest(DCCTransfer newTransfer)
+		{
+			if (this.DCCTransferRequested != null)
+				this.DCCTransferRequested(this, new DCCTransferRequestEventArgs(newTransfer));
+		}
+		
+		internal void FireCtCpReplied(string command, string reply)
+		{
+			if (this.CtCpReplied != null)
+				this.CtCpReplied(this, new CtCpCommandReplyEventArgs(command, reply));
+		}
+		
+		internal void FireCtCpPingReplied(TimeSpan time)
+		{
+			if (this.CtCpPingReplied != null)
+				this.CtCpPingReplied(this, new CtCpPingReplyEventArgs(time));
+		}
+		
+		internal void FireCtCpVersionReplied(string reply)
+		{
+			if (this.CtCpVersionReplied != null)
+				this.CtCpVersionReplied(this, new CtCpReplyEventArgs(reply));
+		}
+		
+		internal void FireCtCpFingerReplied(string reply)
+		{
+			if (this.CtCpFingerReplied != null)
+				this.CtCpFingerReplied(this, new CtCpReplyEventArgs(reply));
+		}
+		
+		internal void FireCtCpTimeReplied(string reply)
+		{
+			if (this.CtCpTimeReplied != null)
+				this.CtCpTimeReplied(this, new CtCpReplyEventArgs(reply));
+		}
+		
+		internal void FireQuitted(string reason)
+		{
+			if (this.Quitted != null)
+				this.Quitted(this, new QuitEventArgs(reason));
+		}
+		
+		internal void FireBeforeNickChange(string newNick)
+		{
+			if (this.BeforeNickChange != null)
+				this.BeforeNickChange(this, new BeforeNickChangeEventArgs(newNick));
+		}
+		
+		internal void FireNickChange(string oldNick)
+		{
+			if (this.NickChange != null)
+				this.NickChange(this, new NickChangeEventArgs(oldNick));
 		}
 	}
 }

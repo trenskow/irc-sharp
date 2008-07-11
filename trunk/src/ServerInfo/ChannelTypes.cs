@@ -63,8 +63,8 @@ namespace IRC
             foreach (string strPrefix in strPrefixs)
             {
                 string strP = strPrefix;
-                if (strP == "#" && _parent.ServerInfo["MAXCHANNELS"] != null)
-                    strP = string.Format("#:{0}", _parent.ServerInfo["MAXCHANNELS"]);
+                if (strP == "#" && _parent.Server["MAXCHANNELS"] != null)
+                    strP = string.Format("#:{0}", _parent.Server["MAXCHANNELS"]);
                 string[] strParts = strP.Split(':');
                 if (strParts.Length > 1 && strParts[1] == "")
                     strParts[1] = "0";

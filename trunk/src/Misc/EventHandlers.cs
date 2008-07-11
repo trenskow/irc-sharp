@@ -39,23 +39,24 @@ namespace IRC
 	/// <summary>
 	/// Used with the Join event.
 	/// </summary>
-	public delegate void JoinEventHandler(Connection sender, JoinEventArgs e);
+	public delegate void JoinEventHandler(Channel sender, JoinEventArgs e);
 	/// <summary>
 	/// Used with the JoinComplete event.
 	/// </summary>
 	public delegate void JoinCompleteEventHandler(Connection sender, JoinCompleteEventArgs e);
+	public delegate void PartCompleteEventHandler(Connection sender, PartCompleteEventArgs e);
 	/// <summary>
 	/// Used with the ModeChange event.
 	/// </summary>
-	public delegate void ModeChangeEventHandler(Connection sender, ModeChangeEventArgs e);
+	public delegate void ModeChangeEventHandler(Channel sender, ModeChangeEventArgs e);
 	/// <summary>
 	/// Used with the BeforePart and Part events.
 	/// </summary>
-	public delegate void PartEventHandler(Connection sender, PartEventArgs e);
+	public delegate void PartEventHandler(Channel sender, PartEventArgs e);
 	/// <summary>
 	/// Used with the BeforeQuit and Quit events.
 	/// </summary>
-	public delegate void QuitEventHandler(Connection sender, QuitEventArgs e);
+	public delegate void QuitEventHandler(User sender, QuitEventArgs e);
 	/// <summary>
 	/// Used with the Invitation event.
 	/// </summary>
@@ -63,11 +64,11 @@ namespace IRC
 	/// <summary>
 	/// Used with the Message, Notice and Action events.
 	/// </summary>
-	public delegate void MessageEventHandler(Connection sender, MessageEventArgs e);
+	public delegate void MessageEventHandler(MessageReciever sender, MessageEventArgs e);
 	/// <summary>
 	/// Used with the CtCpMessage event.
 	/// </summary>
-	public delegate void CtCpMessageEventHandler(Connection sender, CtCpMessageEventArgs e);
+	public delegate void CtCpMessageEventHandler(MessageReciever sender, CtCpMessageEventArgs e);
 	/// <summary>
 	/// Used when receiving a CTCP VERSION request. This request is when other users need to know your client. This event is trigered when this information is needed by the control.
 	/// </summary>
@@ -84,19 +85,19 @@ namespace IRC
 	/// <summary>
 	/// Used with the CtCpPingReply event.
 	/// </summary>
-	public delegate void CtCpPingReplyEventHandler(Connection sender, CtCpPingReplyEventArgs e);
+	public delegate void CtCpPingReplyEventHandler(User sender, CtCpPingReplyEventArgs e);
 	/// <summary>
 	/// Used with the CtCpVersionReply, CtCpFingerReply, CtCpTimeReply events.
 	/// </summary>
-	public delegate void CtCpReplyEventHandler(Connection sender, CtCpReplyEventArgs e);
+	public delegate void CtCpReplyEventHandler(User sender, CtCpReplyEventArgs e);
 	/// <summary>
 	/// Used with the CtCpReply event.
 	/// </summary>
-	public delegate void CtCpCommandReplyEventHandler(Connection sender, CtCpCommandReplyEventArgs e);
+	public delegate void CtCpCommandReplyEventHandler(User sender, CtCpCommandReplyEventArgs e);
 	/// <summary>
 	/// Used with the BeforeKick and Kick events.
 	/// </summary>
-	public delegate void KickEventHandler(Connection sender, KickEventArgs e);
+	public delegate void KickEventHandler(Channel sender, KickEventArgs e);
 	/// <summary>
 	/// Used with the ServerNotice event.
 	/// </summary>
@@ -104,23 +105,23 @@ namespace IRC
 	/// <summary>
 	/// Used with the NickChange event.
 	/// </summary>
-	public delegate void NickChangeEventHandler(Connection sender, NickChangeEventArgs e);
+	public delegate void NickChangeEventHandler(User sender, NickChangeEventArgs e);
     /// <summary>
 	/// Used with the NickChange event.
 	/// </summary>
-	public delegate void BeforeNickChangeEventHandler(Connection sender, BeforeNickChangeEventArgs e);
+	public delegate void BeforeNickChangeEventHandler(User sender, BeforeNickChangeEventArgs e);
     /// <summary>
     /// Used with the ModeChanged event.
     /// </summary>
-    public delegate void UserModeEventHandler(Connection sender, UserModeEventArgs e);
+    public delegate void UserModeEventHandler(Channel sender, UserModeEventArgs e);
     /// <summary>
     /// Used with the DCCChatRequest event.
     /// </summary>
-    public delegate void DCCChatRequestEventHandler(Connection sender, DCCChatRequestEventArgs e);
+    public delegate void DCCChatRequestEventHandler(User sender, DCCChatRequestEventArgs e);
     /// <summary>
     /// Used with the DCCTransferRequest event.
     /// </summary>
-	public delegate void DCCTransferRequestEventHandler(Connection sender, DCCTransferRequestEventArgs e);
+	public delegate void DCCTransferRequestEventHandler(User sender, DCCTransferRequestEventArgs e);
     /// <summary>
     /// Used with the ChannelListUpdateProgress event.
     /// </summary>
@@ -141,7 +142,8 @@ namespace IRC
 	/// <summary>
 	/// Occurs when a users information is update. Eg. nickchange.
 	/// </summary>
-	public delegate void UserInfoEventHandler(Connection sender, UserEventArgs e);
+	public delegate void UserInfoEventHandler(User sender, EventArgs e);
+	public delegate void UnknownUserEmergedEventHandler(Connection sender, UnknownUserEmergedEventArgs e);
 	#endregion
 }
 	

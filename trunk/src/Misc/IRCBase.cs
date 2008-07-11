@@ -37,5 +37,10 @@ namespace IRC
 		{
 			get { return _currentConnection; }
 		}
+		
+		public Connection Connection
+		{
+			get { return _currentConnection.Owner; }
+		}
 	} 
 }

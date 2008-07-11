@@ -30,6 +30,26 @@ namespace IRC
         private ChannelListContainer channelList;
         private int _curr = -1;
 
+		/// <summary>
+		/// Occurs when the client has joined a channel, and all channel information has been retrieved (mode, topic and bans).
+		/// </summary>
+		/// <seealso cref="JoinCompleteEventArgs"/>
+		/// <threadsafe instance="false"/>
+		/// <remarks>When this event is fired by the Connection, it is fired in another thread then the original thread 
+		/// that created the class. Because of this you need to use the Invoke() method on your form if you're creating using Windows forms.</remarks>
+		public event JoinCompleteEventHandler JoinComplete;
+		
+		/// <summary>
+		/// Occurs when a user send an invitation (/INVITE) to join a channel.
+		/// </summary>
+		/// <seealso cref="InvitationEventArgs"/>
+		/// <threadsafe instance="false"/>
+		/// <remarks>When this event is fired by the Connection, it is fired in another thread then the original thread 
+		/// that created the class. Because of this you need to use the Invoke() method on your form if you're creating using Windows forms.</remarks>
+		public event InvitationEventHandler Invitation;
+
+		public event PartCompleteEventHandler PartComplete;
+
         internal ChannelContainer(ServerConnection creatorsCurrentConnection) : base(creatorsCurrentConnection)
         {
             channelList = new ChannelListContainer(creatorsCurrentConnection);
@@ -198,5 +218,23 @@ namespace IRC
         }
 
         #endregion
-}
+		
+		internal void FireJoinCompleted(Channel channel)
+		{
+			if (this.JoinComplete != null)
+				this.JoinComplete(base.CurrentConnection.Owner, new JoinCompleteEventArgs(channel));
+		}
+		
+		internal void FirePartCompleted(Channel channel)
+		{
+			if (this.PartComplete != null)
+				this.PartComplete(base.CurrentConnection.Owner, new PartCompleteEventArgs(channel));
+		}
+		
+		internal void FireInvitation(User user, string channelName)
+		{
+			if (this.Invitation != null)
+				this.Invitation(base.CurrentConnection.Owner, new InvitationEventArgs(user, channelName));
+		}
+	}
 }
