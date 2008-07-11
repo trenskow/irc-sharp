@@ -625,4 +625,20 @@ namespace IRC
 		}
 	}
 #endregion
+#region RawDataEventArgs
+	public class RawDataEventArgs
+	{
+		private string _data;
+		
+		internal RawDataEventArgs(string __data)
+		{
+			_data = __data;
+		}
+		
+		public string Data
+		{
+			get { return _data; }
+		}
+	}
+#endregion
 }

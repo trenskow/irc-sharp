@@ -59,6 +59,7 @@ namespace IRC
 		/// <remarks>When this event is fired by the Connection, it is fired in another thread then the original thread 
 		/// that created the class. Because of this you need to use the Invoke() method on your form if you're creating using Windows forms.</remarks>
 		public event ServerNoticeEventHandler ServerNotice;
+		public event RawDataEventHandler RawRecieve;
 
         /// <summary>
         /// Identifies case mappings used by server.
@@ -274,6 +275,11 @@ namespace IRC
             }
         }
 
+		public void RawSend(string data)
+		{
+			base.CurrentConnection.SendData(data);
+		}
+		
         #endregion
 
 		public string MessageOfTheDay
@@ -365,6 +371,12 @@ namespace IRC
 		{
 			if (this.ServerNotice != null)
 				this.ServerNotice(base.CurrentConnection.Owner, new ServerNoticeEventArgs(recipient, message));
+		}
+		
+		internal void FireRawRecieve(string data)
+		{
+			if (this.RawRecieve != null)
+				this.RawRecieve(base.CurrentConnection.Owner, new RawDataEventArgs(data));
 		}
     }
 }
