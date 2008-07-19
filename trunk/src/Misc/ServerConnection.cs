@@ -181,7 +181,7 @@ namespace IRC
 				{
 					string strData = stateObject.lastBuffer + Encoding.Default.GetString(stateObject.buffer, 0, read);
 
-					strData = strData.Replace("", "\n").Replace("\r", "\n");
+					strData = strData.Replace("\r\n", "\n").Replace("\r", "\n");
 
                     while (strData.Length > 0 && strData[0] == '\n')
                         strData = strData.Substring(1);
