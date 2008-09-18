@@ -23,7 +23,7 @@ using System.Net.Sockets;
 using System.Text;
 #endregion
 
-namespace IRC
+namespace ircsharp
 {
 	#region IRCStateObject
 	internal class IRCStateObject

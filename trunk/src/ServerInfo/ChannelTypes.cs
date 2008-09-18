@@ -19,7 +19,7 @@
 using System;
 using System.Text;
 
-namespace IRC
+namespace ircsharp
 {
     public class ChannelTypes : IRCBase
     {

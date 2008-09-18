@@ -18,7 +18,7 @@
 using System;
 using System.Collections;
 
-namespace IRC
+namespace ircsharp
 {
 	public class UserContainer : IRCBase, IEnumerator, IEnumerable
 	{

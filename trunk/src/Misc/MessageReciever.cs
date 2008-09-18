@@ -17,7 +17,7 @@
 
 using System;
 
-namespace IRC
+namespace ircsharp
 {
 	public class MessageReciever : IRCBase
 	{

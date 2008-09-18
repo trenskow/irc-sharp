@@ -20,9 +20,9 @@ using System;
 using System.Net;
 using System.Net.Sockets;
 using System.Timers;
-using IRC;
+using ircsharp;
 
-namespace IRC
+namespace ircsharp
 {
 	internal class DccStateObject
 	{

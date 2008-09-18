@@ -18,7 +18,7 @@
 #endregion
 using System;
 
-namespace IRC
+namespace ircsharp
 {
     /// <summary>
     /// Describes the users status on channel.

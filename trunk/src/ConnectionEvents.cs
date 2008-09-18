@@ -17,7 +17,7 @@
 
 using System;
 
-namespace IRC
+namespace ircsharp
 {
 	public partial class Connection : IRCBase
 	{

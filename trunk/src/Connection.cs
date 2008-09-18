@@ -28,7 +28,7 @@
 using System;
 using System.Text;
 
-namespace IRC
+namespace ircsharp
 {
 	#region ConnectFailedReason
 	/// <summary>

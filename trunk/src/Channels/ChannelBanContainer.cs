@@ -19,7 +19,7 @@
 using System;
 using System.Collections;
 
-namespace IRC
+namespace ircsharp
 {
 	/// <summary>
 	/// Summary description for ChannelBanContainer.

@@ -19,7 +19,7 @@
 using System;
 using System.IO;
 
-namespace IRC
+namespace ircsharp
 {
 	/// <summary>
 	/// An enum with info on what to do when accepting a file that already exist.

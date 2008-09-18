@@ -20,7 +20,7 @@ using System;
 using System.Collections.Specialized;
 using System.Text;
 
-namespace IRC
+namespace ircsharp
 {
     /// <summary>
     /// Contains information about channel modes supported by server.
