@@ -1,5 +1,5 @@
 -------------------------------------------------------------------------------
-                          IRControl .NET IRC Library
+                           irc-sharp .NET IRC Library
 -------------------------------------------------------------------------------
 Copyright 2004-2005 by Kristian Trenskow. All rights reserved.
 Licenced under the BSD License. For more information read
@@ -15,4 +15,4 @@ bin/ contains the compiled assembly
 docs/ contains the monodocs and an html version
 src/ contains all sources
 
-This software is provided as is. No warrenty.
+This software is provided as is. No warranty.
