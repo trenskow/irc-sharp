@@ -20,9 +20,9 @@ using System;
 using System.Net;
 using System.Net.Sockets;
 using System.IO;
-using IRC;
+using ircsharp;
 
-namespace IRC
+namespace ircsharp
 {
 	/// <summary>
 	/// This class is used to control DCC. This class can only be instanced by Connection.

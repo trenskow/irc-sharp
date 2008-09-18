@@ -18,7 +18,7 @@
 #endregion
 using System;
 
-namespace IRC
+namespace ircsharp
 {
 	/// <summary>
 	/// This is an abstact class only used within the IRC namespace.

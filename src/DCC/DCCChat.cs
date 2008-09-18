@@ -18,7 +18,7 @@
 #endregion
 using System;
 
-namespace IRC
+namespace ircsharp
 {
 	public delegate void DCCChatEventHandler(DCCChat sender, EventArgs e);
 	public delegate void DCCChatMessageEventHandler(DCCChat sender, DCCChatMessageEventArgs e);

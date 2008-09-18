@@ -17,7 +17,7 @@
 
 using System;
 
-namespace IRC
+namespace ircsharp
 {
 	#region Delegates
 	/// <summary>

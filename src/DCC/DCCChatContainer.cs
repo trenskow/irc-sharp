@@ -17,10 +17,10 @@
  */
 #endregion
 using System;
-using IRC;
+using ircsharp;
 using System.Collections;
 
-namespace IRC
+namespace ircsharp
 {
 	/// <summary>
 	/// Summary description for DCCChatContainer.

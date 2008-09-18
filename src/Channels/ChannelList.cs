@@ -17,9 +17,9 @@
  */
 #endregion
 using System;
-using IRC;
+using ircsharp;
 
-namespace IRC
+namespace ircsharp
 {
 	/// <summary>
 	/// Summary description for ChannelList.

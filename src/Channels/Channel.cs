@@ -18,7 +18,7 @@
 #endregion
 using System;
 
-namespace IRC
+namespace ircsharp
 {
 	/// <summary>
 	/// Summary description for Channel.

@@ -21,7 +21,7 @@ using System.Collections;
 using System.Collections.Specialized;
 using System.Text.RegularExpressions;
 
-namespace IRC
+namespace ircsharp
 {
     public class ServerInfo : IRCBase, IEnumerator, IEnumerable
     {

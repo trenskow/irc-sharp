@@ -21,9 +21,9 @@ using System.Net;
 using System.Net.Sockets;
 using System.IO;
 using System.Text;
-using IRC;
+using ircsharp;
 
-namespace IRC
+namespace ircsharp
 {
 	internal class IRCIdentStateObject
 	{
