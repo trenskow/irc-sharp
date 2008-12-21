@@ -64,7 +64,7 @@ namespace ircsharp
         /// <summary>
         /// Identifies case mappings used by server.
         /// </summary>
-        public enum IRCaseMapping
+        public enum IRCCaseMapping
         {
             ASCII,
             RFC1459,
@@ -158,19 +158,19 @@ namespace ircsharp
         /// <summary>
         /// Returns case mapping allowed by server in channel names and user names.
         /// </summary>
-        public IRCaseMapping CaseMapping
+        public IRCCaseMapping CaseMapping
         {
             get
             {
                 switch (nm["CASEMAPPING"])
                 {
                     case "ascii":
-                        return IRCaseMapping.ASCII;
+                        return IRCCaseMapping.ASCII;
                     case "strick-rfc1459":
-                        return IRCaseMapping.RFC1459strict;
+                        return IRCCaseMapping.RFC1459strict;
                     case "rfc1459":
                     default:
-                        return IRCaseMapping.RFC1459;
+                        return IRCCaseMapping.RFC1459;
                 }
             }
         }

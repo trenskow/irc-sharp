@@ -1,3 +1,7 @@
+2008-12-21   <> 
+
+	* ServerInfo/ServerInfo.cs: Changed enum IRCaseMapping to IRCCaseMapping.
+
 2008-07-11   <> 
 
 	
