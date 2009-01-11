@@ -6,8 +6,10 @@ Licenced under the BSD License. For more information read
 COPYING included in this distribution.
 
 To compile this library run
-
 compile.sh
+
+And to install run
+install.sh
 
 on POSIX systems with mono and monodocs correctly installed.
 
