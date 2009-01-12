@@ -441,7 +441,7 @@ namespace ircsharp
 				case "372":
 					if (e.Command=="375")
 						strMOTD = new StringBuilder();
-					strMOTD.Append(e.Parameters[e.Parameters.Length - 0]);
+					strMOTD.Append(string.Join(" ", e.Parameters));
 					break;
 #endregion
 #region 332 // Channel topic
@@ -459,45 +459,48 @@ namespace ircsharp
 #region 353 // Names in channel
 				case "353":
 					string[] strNames = e.Parameters;
-					for (int x = e.descriptionBeginsAtIndex ; x < strNames.Length ; x++)
-					{
-						ChannelUserStatus status = ChannelUserStatus.NotAStatus;
-						
-						bool blVoiced = false;
-						bool blHalfOpped = false;
-						bool blOpped = false;
-						
-						while ((status = serverInfo.GetUserStatusFromPrefix(strNames[x][0])) != ChannelUserStatus.NotAStatus)
-						{
-							switch (status)
-							{
-							case ChannelUserStatus.Operator:
-								blOpped = true;
-								break;
-							case ChannelUserStatus.HalfOperator:
-								blHalfOpped = true;
-								break;
-							case ChannelUserStatus.Voiced:
-								blVoiced = true;
-								break;
-							}
-							strNames[x] = strNames[x].Substring(1);
-						}
-						
-						ChannelUser newUser;
-						if (strNames[x]!=strNickname)
-						{
-							newUser = new ChannelUser(base.CurrentConnection, users.GetUser(strNames[x], false), e.Parameters[2]);
-							channels[e.Parameters[2]].Users.AddUser(newUser);
-						}
-						else
-						{
-							newUser = channels[e.Parameters[2]].Users[strNames[x]];
-						}
-						newUser.IsOperator = blOpped;
-						newUser.IsVoiced = blVoiced;
-						newUser.IsHalfOperator = blHalfOpped;
-					}
+                    for (int x = e.descriptionBeginsAtIndex; x < strNames.Length; x++)
+                    {
+                        if (strNames[x].Trim().Length > 0)
+                        {
+                            ChannelUserStatus status = ChannelUserStatus.NotAStatus;
+
+                            bool blVoiced = false;
+                            bool blHalfOpped = false;
+                            bool blOpped = false;
+
+                            while ((status = serverInfo.GetUserStatusFromPrefix(strNames[x][0])) != ChannelUserStatus.NotAStatus)
+                            {
+                                switch (status)
+                                {
+                                    case ChannelUserStatus.Operator:
+                                        blOpped = true;
+                                        break;
+                                    case ChannelUserStatus.HalfOperator:
+                                        blHalfOpped = true;
+                                        break;
+                                    case ChannelUserStatus.Voiced:
+                                        blVoiced = true;
+                                        break;
+                                }
+                                strNames[x] = strNames[x].Substring(1);
+                            }
+
+                            ChannelUser newUser;
+                            if (strNames[x] != strNickname)
+                            {
+                                newUser = new ChannelUser(base.CurrentConnection, users.GetUser(strNames[x], false), e.Parameters[1]);
+                                channels[e.Parameters[1]].Users.AddUser(newUser);
+                            }
+                            else
+                            {
+                                newUser = channels[e.Parameters[1]].Users[strNames[x]];
+                            }
+                            newUser.IsOperator = blOpped;
+                            newUser.IsVoiced = blVoiced;
+                            newUser.IsHalfOperator = blHalfOpped;
+                        }
+                    }
 					break;
 #endregion
 #region 324 // Channel Mode
@@ -511,13 +514,13 @@ namespace ircsharp
 #endregion
 #region 329 // Channel created time
 				case "329":
-					channels[e.Parameters[0]].SetCreatedAt(IRCDateTime(e.Parameters[2]));
+					channels[e.Parameters[0]].SetCreatedAt(IRCDateTime(e.Parameters[1]));
 					break;
 #endregion
 #region 367 // Channel ban
 				case "367":
 					ChannelBan newBan = new ChannelBan(base.CurrentConnection, e.Parameters[0], e.Parameters[1], e.Parameters[2], IRCDateTime(e.Parameters[3]));
-					channels[e.Parameters[1]].Bans.AddBan(newBan);
+					channels[e.Parameters[0]].Bans.AddBan(newBan);
 					break;
 #endregion
 #region 321 // Start of channel list
@@ -548,21 +551,26 @@ namespace ircsharp
 						cRealName = cRealName.Substring(cRealName.IndexOf(" ") + 1);
 					
 					User cFullUser = users.GetUser(cUser);
-					
-					foreach (char c in e.Parameters[5])
-					{
-						if (c == serverInfo.OperatorPrefix)
-							channels[e.Parameters[0]].Users[cFullUser].IsOperator = true;
-						if (c == serverInfo.VoicePrefix)
-							channels[e.Parameters[0]].Users[cFullUser].IsVoiced = true;
-					}
+
+                    if (channels[e.Parameters[0]] != null)
+                    {
+                        foreach (char c in e.Parameters[5])
+                        {
+                            if (c == serverInfo.OperatorPrefix)
+                                channels[e.Parameters[0]].Users[cFullUser].IsOperator = true;
+                            if (c == serverInfo.VoicePrefix)
+                                channels[e.Parameters[0]].Users[cFullUser].IsVoiced = true;
+                        }
+                    }
 					
 					cFullUser.SetAllInfo(cUser, cRealName, e.Parameters[2]);
 					break;
 #endregion
 #region 315 // End of WHO response
 				case "315":
-					channels.FireJoinCompleted(channels.GetChannel(e.Parameters[0]));
+                    Channel cChan = channels.GetChannel(e.Parameters[0]);
+                    if (cChan != null)
+					    channels.FireJoinCompleted(channels.GetChannel(e.Parameters[0]));
 					break;
 				}
 				serverInfo.FireServerMessage(int.Parse(e.Command), e.Parameters);
@@ -782,10 +790,17 @@ namespace ircsharp
 						if (e.Parameters.Length > 1)
 						{
 							CheckVoice(e.Parameters[0], user);
-							if (e.Parameters[1].Length > 2 && e.Parameters[1][0] == 1 && e.Parameters[1][e.Parameters[1].Length - 1] == 1) // Is CTPCP
-								ParseCTCP(user, GetMessageReciever(e.Parameters[0]), e.Parameters[1].Substring(1, e.Parameters[1].Length - 2), true);
-							else
-								GetMessageReciever(e.Parameters[0]).FireRecievedNotice(users.GetUser(user), e.Parameters[1]);
+                            if (e.Parameters[1].Length > 2 && e.Parameters[1][0] == 1 && e.Parameters[1][e.Parameters[1].Length - 1] == 1) // Is CTPCP
+                                ParseCTCP(user, GetMessageReciever(e.Parameters[0]), e.Parameters[1].Substring(1, e.Parameters[1].Length - 2), true);
+                            else
+                            {
+                                User uInfo = users.GetUser(user);
+                                MessageReciever mRec = GetMessageReciever(e.Parameters[0]);
+                                if (mRec == null)
+                                    serverInfo.FireServerNotice(e.Parameters[0], e.Parameters[1]);
+                                else
+                                    mRec.FireRecievedNotice(uInfo, e.Parameters[1]);
+                            }
 						}
 						break;
 #endregion
@@ -1001,8 +1016,10 @@ namespace ircsharp
 				{
 					if (channelUser.User.Nick.ToLower()==user.Nick.ToLower())
 					{
+                        channelUser.User.HoldBackInfoUpdatedEvent = true;
 						channelUser.User.Host = user.Host;
 						channelUser.User.Identity = user.Identity;
+                        channelUser.User.HoldBackInfoUpdatedEvent = false;
 					}
 				}
 			}

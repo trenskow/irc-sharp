@@ -26,6 +26,9 @@ namespace ircsharp
 		private string strHost;
 		private string strRealName;
 		private string strUsingServer;
+
+        private bool blHoldBackInfoUpdatedEvent;
+        private bool blInfoWasUpdated;
 		
 		/// <summary>
 		/// Occures when a user send a request for a DCC chat.
@@ -125,11 +128,14 @@ namespace ircsharp
 			strIdentity = Identity;
 			strHost = Host;
 			strRealName = RealName;
+
+            blHoldBackInfoUpdatedEvent = false;
+            blInfoWasUpdated = false;
 		}
 		
 		internal User(ServerConnection creatorsServerConnection, string Nick, string Identity, string Host, bool askWho) : this(creatorsServerConnection, Nick, Identity, Host, null)
 		{
-			if (askWho)
+			if (askWho && Nick.IndexOf(".") == - 1) // "." Indicates server. Don't ask who.
 				base.CurrentConnection.SendData("WHO {0}", strNick);
 		}
 		
@@ -147,7 +153,17 @@ namespace ircsharp
 			if (InfoUpdated != null)
 				InfoUpdated(this, new EventArgs());
 		}
-		
+
+        internal bool HoldBackInfoUpdatedEvent
+        {
+            set
+            {
+                blHoldBackInfoUpdatedEvent = value;
+                if (blHoldBackInfoUpdatedEvent == false && blInfoWasUpdated)
+                    FireInfoUpdated();
+            }
+        }
+
 		public string Nick
 		{
 			get { return strNick; }
@@ -164,10 +180,12 @@ namespace ircsharp
 		{
 			get { return strIdentity; }
 			internal set
-			{ 
-				strIdentity = value;
-				if (InfoUpdated != null)
-					InfoUpdated(this, new EventArgs());
+			{
+                if (strIdentity != value)
+                {
+                    strIdentity = value;
+                    FireInfoUpdated();
+                }
 			}
 		}
 		
@@ -176,9 +194,11 @@ namespace ircsharp
 			get { return strHost; }
 			internal set
 			{
-				strHost = value;
-				if (InfoUpdated != null)
-					InfoUpdated(this, new EventArgs());
+                if (strHost != value)
+                {
+                    strHost = value;
+                    FireInfoUpdated();
+                }
 			}
 		}
 		
@@ -187,9 +207,11 @@ namespace ircsharp
 			get { return strRealName; }
 			internal set
 			{
-				strRealName = value;
-				if (InfoUpdated != null)
-					InfoUpdated(this, new EventArgs());
+                if (strRealName != value)
+                {
+                    strRealName = value;
+                    FireInfoUpdated();
+                }
 			}
 		}
 		
@@ -206,6 +228,18 @@ namespace ircsharp
 		{
 			base.CurrentConnection.SendData("INVITE " + strNick + " " + ChannelName);
 		}
+
+        internal void FireInfoUpdated()
+        {
+            if (!blHoldBackInfoUpdatedEvent)
+            {
+                if (InfoUpdated != null)
+                    InfoUpdated(this, new EventArgs());
+                blInfoWasUpdated = false;
+            }
+            else
+                blInfoWasUpdated = true;
+        }
 		
 		internal void FireDCCChatRequest(DCCChat newChat)
 		{
