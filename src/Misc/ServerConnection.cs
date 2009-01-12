@@ -339,8 +339,8 @@ namespace ircsharp
 					//System.Diagnostics.Debug.WriteLine("       Error: {0}", e.Message);
 #endif
 #if DEBUGCONSOLE
-					Console.WriteLine("  ^^^^ Could not parse line:");
-					Console.WriteLine("       Error: {0}", e.Message);
+					//Console.WriteLine("  ^^^^ Could not parse line:");
+					//Console.WriteLine("       Error: {0}", e.Message);
 #endif
 				//}
 			}
