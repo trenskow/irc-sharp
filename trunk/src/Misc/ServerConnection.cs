@@ -186,7 +186,17 @@ namespace ircsharp
                     while (strData.Length > 0 && strData[0] == '\n')
                         strData = strData.Substring(1);
 
-					stateObject.lastBuffer = onData(strData);
+					//try
+					//{
+						stateObject.lastBuffer = onData(strData);
+					//}
+					//catch (Exception e)
+					//{
+					//	Console.WriteLine("Data could not be parsed:");
+					//	Console.WriteLine(e.Message);
+					//	Console.WriteLine(e.Source);
+					//	Console.WriteLine(e.StackTrace);
+					//}
 				}
 
 				if (socket.Connected)
@@ -214,9 +224,6 @@ namespace ircsharp
 		#region onData
 		private string onData(string strData)
 		{
-#if DEBUG
-			System.Diagnostics.Debug.Write(strData);
-#endif
 			string[] strLines = strData.Split(new char[] {'\n'});
 
 			string strCommand;
@@ -225,96 +232,117 @@ namespace ircsharp
 
 			for (int x=0;x<strLines.Length - 1;x++)
 			{
-				string strUser;
-				bool blIsServerMessage;
+#if DEBUG
+				System.Diagnostics.Debug.WriteLine(strLines[x]);
+#endif
+#if DEBUGCONSOLE
+				Console.WriteLine(strLines[x]);
+#endif
 
-                if (strLines[x].Length > 1)
-                {
-                    if (strLines[x].Substring(0, 1) == ":")
-                    {
-                        strLines[x] = strLines[x].Substring(1, strLines[x].Length - 1);
-
-						string[] strSegments = strLines[x].Split(new char[] { ' ' });
-						// We probably dealing with a server code message
-						if (strSegments.Length > 3 && strSegments[1].Length == 3 && strSegments[1][0] >= '0' && strSegments[1][0] <= '9')
-						{
-							strUser = strSegments[0];
-							strCommand = strSegments[1];
-							// [2] is just our own nick
-							
-							int descriptionBeginsAtIndex = -1; 
-							strParams = new string[strSegments.Length - 3];
-							for (int i = 3 ; i < strSegments.Length - 3; i++)
+				//try
+				{
+					string strUser;
+					bool blIsServerMessage;
+	
+	                if (strLines[x].Length > 0)
+	                {
+	                    if (strLines[x].Substring(0, 1) == ":")
+	                    {
+	                        strLines[x] = strLines[x].Substring(1, strLines[x].Length - 1);
+	
+							string[] strSegments = strLines[x].Split(new char[] { ' ' });
+							// We probably dealing with a server code message
+							if (strSegments.Length > 3 && strSegments[1].Length == 3 && strSegments[1][0] >= '0' && strSegments[1][0] <= '9')
 							{
-								if (strSegments[i].Length > 1 && strSegments[i][0] == ':' && descriptionBeginsAtIndex == -1)
+								strUser = strSegments[0];
+								strCommand = strSegments[1];
+								// [2] is just our own nick
+								
+								int descriptionBeginsAtIndex = -1; 
+								strParams = new string[strSegments.Length - 3];
+								for (int i = 3 ; i < strSegments.Length; i++)
 								{
-									strParams[i - 3] = strSegments[i].Substring(1);
-									descriptionBeginsAtIndex = x - 3;
+									if (strSegments[i].Length > 1 && strSegments[i][0] == ':' && descriptionBeginsAtIndex == -1)
+									{
+										strParams[i - 3] = strSegments[i].Substring(1);
+										descriptionBeginsAtIndex = i - 3;
+									}
+									else
+										strParams[i - 3] = strSegments[i];
 								}
-								else
-									strParams[i - 3] = strSegments[i];
+								
+								if (OnDataReceived != null)
+									OnDataReceived(this, new OnDataEventArgs(strUser, strCommand, strParams, descriptionBeginsAtIndex, true, strLines[x]));
 							}
-							
-							if (OnDataReceived != null)
-								OnDataReceived(this, new OnDataEventArgs(strUser, strCommand, strParams, descriptionBeginsAtIndex, true, strLines[x]));
-						}
-						else
-						{
-							// This following code is old parsing code. It emits a lot of properties from the parser, but it works.
-							
-							if (strLines[x].IndexOf(" :") > -1)
+							else
 							{
-								strParam = strLines[x].Substring(strLines[x].IndexOf(" :") + 2, strLines[x].Length - (strLines[x].IndexOf(" :") + 2));
-								strLines[x] = strLines[x].Substring(0, strLines[x].IndexOf(" :") + 1).Trim();
+								// This following code is old parsing code. It holds back a lot of properties from the parser, but it works.
+								
+								if (strLines[x].IndexOf(" :") > -1)
+								{
+									strParam = strLines[x].Substring(strLines[x].IndexOf(" :") + 2, strLines[x].Length - (strLines[x].IndexOf(" :") + 2));
+									strLines[x] = strLines[x].Substring(0, strLines[x].IndexOf(" :") + 1).Trim();
+								}
+								
+								string[] strParts = strLines[x].Split(new char[] { ' ' });
+								
+								strUser = strParts[0];
+								strCommand = strParts[1];
+								blIsServerMessage = strParts[1][0] >= '0' && strParts[1][0] <= '9';
+	
+								int size = strParts.Length - 2;
+								if (strParam != null)
+									size++;
+								strParams = new string[size];
+								
+								for (int y = 2; y < strParts.Length; y++)
+									strParams[y - 2] = strParts[y];
+								
+								if (strParam != null)
+									strParams[strParams.Length - 1] = strParam;
+								
+								if (OnDataReceived != null)
+									OnDataReceived(this, new OnDataEventArgs(strUser, strCommand, strParams, blIsServerMessage, strLines[x]));
 							}
-							
-							string[] strParts = strLines[x].Split(new char[] { ' ' });
-							
-							strUser = strParts[0];
-							strCommand = strParts[1];
-							blIsServerMessage = strParts[1][0] >= '0' && strParts[1][0] <= '9';
-
-							int size = strParts.Length - 2;
-							if (strParam != null)
-								size++;
-							strParams = new string[size];
-							
-							for (int y = 2; y < strParts.Length; y++)
-								strParams[y - 2] = strParts[y];
-							
-							if (strParam != null)
-								strParams[strParams.Length - 1] = strParam;
-							
-							if (OnDataReceived != null)
-								OnDataReceived(this, new OnDataEventArgs(strUser, strCommand, strParams, blIsServerMessage, strLines[x]));
-						}
-                    }
-                    else
-                    {
-                        if (strLines[x].IndexOf(":") > 0)
-                        {
-                            strParam = strLines[x].Substring(strLines[x].IndexOf(":") + 1, strLines[x].Length - (strLines[x].IndexOf(":") + 1));
-                            strLines[x] = strLines[x].Substring(0, strLines[x].IndexOf(":"));
-                        }
-
-                        string[] strParts = strLines[x].Split(new char[] { ' ' });
-
-                        strCommand = strParts[0];
-                        int size = strParts.Length - 2;
-                        if (strParam != null)
-                            size++;
-                        strParams = new string[size];
-
-                        for (int y = 1; y < strParts.Length; y++)
-                            strParams[y - 1] = strParts[y];
-
-                        if (strParam != null)
-                            strParams[strParams.Length - 1] = strParam;
-
-                        if (OnDataReceived != null)
-                            OnDataReceived(this, new OnDataEventArgs(null, strCommand, strParams, false, strLines[x]));
-                    }
-                }
+	                    }
+	                    else
+	                    {
+	                        if (strLines[x].IndexOf(":") > 0)
+	                        {
+	                            strParam = strLines[x].Substring(strLines[x].IndexOf(":") + 1, strLines[x].Length - (strLines[x].IndexOf(":") + 1));
+	                            strLines[x] = strLines[x].Substring(0, strLines[x].IndexOf(":"));
+	                        }
+	
+	                        string[] strParts = strLines[x].Split(new char[] { ' ' });
+	
+	                        strCommand = strParts[0];
+	                        int size = strParts.Length - 2;
+	                        if (strParam != null)
+	                            size++;
+	                        strParams = new string[size];
+	
+	                        for (int y = 1; y < strParts.Length; y++)
+	                            strParams[y - 1] = strParts[y];
+	
+	                        if (strParam != null)
+	                            strParams[strParams.Length - 1] = strParam;
+	
+	                        if (OnDataReceived != null)
+	                            OnDataReceived(this, new OnDataEventArgs(null, strCommand, strParams, false, strLines[x]));
+	                    }
+	                }
+				}
+				//catch (Exception e)
+				//{
+#if DEBUG
+					//System.Diagnostics.Debug.WriteLine("  ^^^^ Could not parse line:");
+					//System.Diagnostics.Debug.WriteLine("       Error: {0}", e.Message);
+#endif
+#if DEBUGCONSOLE
+					Console.WriteLine("  ^^^^ Could not parse line:");
+					Console.WriteLine("       Error: {0}", e.Message);
+#endif
+				//}
 			}
 
             return strLines[strLines.Length - 1];
@@ -326,10 +354,16 @@ namespace ircsharp
 			if (blActive)
 				dtLastActive = DateTime.Now;
 
+            string strFormattedData = string.Format(strData, objs);
+
 #if DEBUG
-			System.Diagnostics.Debug.Write(strData);
+			System.Diagnostics.Debug.WriteLine(strFormattedData);
 #endif
-			byte[] data = Encoding.Default.GetBytes(string.Format("{0}{1}", string.Format(strData, objs), Environment.NewLine));
+#if DEBUGCONSOLE
+			Console.WriteLine(strFormattedData);
+#endif
+
+			byte[] data = Encoding.Default.GetBytes(string.Format("{0}{1}", strFormattedData, Environment.NewLine));
 
 			if (socket != null && socket.Connected)
 				socket.BeginSend(data, 0, data.Length, SocketFlags.None, new AsyncCallback(sendCallback), blCloseAfterSend);			
