@@ -59,7 +59,7 @@ namespace ircsharp
 		/// <threadsafe instance="false"/>
 		/// <remarks>When this event is fired by the Connection, it is fired in another thread then the original thread 
 		/// that created the class. Because of this you need to use the Invoke() method on your form if you're creating using Windows forms.</remarks>
-		public event ModeChangeEventHandler ChannelModeChange;
+		public event ModeChangeEventHandler ModeChanged;
 
 		/// <summary>
 		/// Occurs when a user parts/leaves a channel, but before his/her info is removed from the Channels array.
@@ -389,8 +389,8 @@ namespace ircsharp
 		
 		internal void FireModeChange(User user, string mode)
 		{
-			if (ChannelModeChange != null)
-				ChannelModeChange(this, new ModeChangeEventArgs(user, mode));
+			if (ModeChanged != null)
+				ModeChanged(this, new ModeChangeEventArgs(user, mode));
 		}
 		
 		internal void FirePart(User user, string reason)
