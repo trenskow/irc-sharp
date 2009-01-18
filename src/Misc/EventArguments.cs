@@ -481,7 +481,7 @@ namespace ircsharp
 			_victimnick = __victimnick;
 			_way = __way;
 		}
-		public User user
+		public User User
 		{
 			get { return _user; }
 		}

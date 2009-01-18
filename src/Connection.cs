@@ -119,13 +119,13 @@ namespace ircsharp
 			{
 				if (value!=null&&value.Trim()!="")
 				{
-					if (!(base.CurrentConnection.IsConnected && IsConnecting))
+					if (!base.CurrentConnection.IsConnected && !IsConnecting)
 					{
 						strNickname = value;
 						users.OwnNick = value;
 					}
 					else
-						base.CurrentConnection.SendData("NICK " + strNickname);
+						base.CurrentConnection.SendData("NICK " + value);
 				}
 				else
 					throw(new ArgumentException("Nickname cannot be null or empty.", "Nickname"));
@@ -403,18 +403,18 @@ namespace ircsharp
 #endregion
 #region 433 // Nickname in use
 				case "433":
-					if (blConnecting==true)
+                    string strNewNick;
+                    if (NickNameInUse != null)
+                    {
+                        strNewNick = NickNameInUse(this, new EventArgs());
+                        if (strNewNick != null && strNewNick.Trim() != "")
+                        {
+                            this.Nickname = strNewNick;
+                            break;
+                        }
+                    }
+                    if (blConnecting == true)
 					{
-						string strNewNick;
-						if (NickNameInUse != null)
-						{
-							strNewNick = NickNameInUse(this, new EventArgs());
-							if (strNewNick != null && strNewNick.Trim() != "")
-							{
-								this.Nickname = strNewNick;
-								break;
-							}
-						}
 						ShutdownClient();
 						if (ConnectFailed!=null)
 							ConnectFailed(this, new ConnectFailedEventArgs(ConnectFailedReason.NicknameInUse));
@@ -757,7 +757,6 @@ namespace ircsharp
 					case "nick":
 						EnsureInformation(user);
 						User nickChanger = users.GetUser(user);
-						nickChanger.FireNickChange(e.Parameters[0]);
 						if (user.Nick.ToLower() == strNickname.ToLower())
 						{
 							strNickname = e.Parameters[0];
@@ -824,7 +823,7 @@ namespace ircsharp
 				serverInfo.FireRawRecieve(e.Raw);
 		}
 #endregion
-#region CheckVoice
+        #region CheckVoice
 		private void CheckVoice(string ChannelName, UserInfo user)
 		{
 			if (channels.IsOnChannel(ChannelName)&&channels[ChannelName].Moderated&&!channels[ChannelName].Users[user.Nick].IsVoiced)
